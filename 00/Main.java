@@ -3,7 +3,7 @@ import java.util.*;
 public class Main{
 
 	public static void main(String[] args) {
-		String filename = args[0];
+		// String filename = args[0];
 		
 		String[] grammar = {"0", "1"};
 

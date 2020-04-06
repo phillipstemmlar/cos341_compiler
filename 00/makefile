@@ -1,19 +1,29 @@
 CC=javac
+JAR=jar
 EXE=java
+
 MAIN=Main
-SRC=./src
-BIN=./bin
+JAR_FILE=COS341.jar
+MANIFEST_FILE=Manifest.txt
 INPUT_FILE=input.txt
 
-make: $(SRC)/*.java
-	$(CC) -d $(BIN) $(SRC)/*.java
-	cp $(SRC)/$(INPUT_FILE) $(BIN)
+make: *.java
+	$(CC) *.java
+
+jar: make
+	$(JAR) cmvf $(MANIFEST_FILE) $(JAR_FILE) *.class 
 
 run: 
-	$(EXE) -cp $(BIN) $(MAIN) $(INPUT_FILE)
+	$(EXE) $(MAIN) $(INPUT_FILE)
+
+exec:
+	${EXE} -${JAR} ${JAR_FILE} $(INPUT_FILE)
 
 clean:
-	-rm $(BIN)/*.class $(BIN)/*.txt
+	-rm *.class
+
+wipe: clean
+	-rm *.jar
 
 again: make
 	make run
