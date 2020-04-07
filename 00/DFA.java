@@ -28,7 +28,7 @@ public class DFA{
 			log("ERROR---{"+input+"}");
 			return false;
 		}else if( curState.isFinal){
-			log("SUCCESS---{"+input+"}");
+			log("SUCCESS---{"+input+"} : [" + ((FinalState)curState).Token + "]");
 			return true;
 		}else{
 			log("-FAILED---{"+input+"}");

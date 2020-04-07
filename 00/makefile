@@ -28,4 +28,5 @@ wipe: clean
 	-rm ${BIN}/*
 
 again: make
+	clear
 	make run
