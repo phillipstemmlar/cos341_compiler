@@ -25,4 +25,17 @@ public class DFAstate{
 			System.out.println("{ " + key + "\t-->\t" + ((state == null)? "null": state.name)  + " }");
 		}
 	}
+
+	public void printTransitionTable(){
+		System.out.println("======={ " + name + " }=======");
+		List<DFAstate> list = new ArrayList<>();
+		for (String key : this.transitions.keySet()) {
+			DFAstate state = this.transitions.get(key);
+			System.out.println("{ " + key + "\t-->\t" + ((state == null)? "null": state.name)  + " }");
+			if(!list.contains(state)) list.add(state);
+		}
+		for(DFAstate state : list){
+			state.printTransitionTable();
+		}
+	}
 }

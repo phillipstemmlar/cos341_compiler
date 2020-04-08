@@ -28,7 +28,7 @@ public class DFA{
 			log("ERROR---{"+input+"}");
 			return false;
 		}else if( curState.isFinal){
-			log("SUCCESS---{"+input+"} : [" + ((FinalState)curState).Token + "]");
+			log("SUCCESS---{"+input+"} : [" + ((FinalDFAState)curState).Token + "]");
 			return true;
 		}else{
 			log("-FAILED---{"+input+"}");
@@ -37,6 +37,10 @@ public class DFA{
 		
 
 
+	}
+
+	public void print(){
+		startState.printTransitionTable();
 	}
 
 	private void log(String out){
