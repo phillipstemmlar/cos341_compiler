@@ -18,24 +18,31 @@ public class DFAstate{
 		return null;
 	}
 
+	public void addTransition(String key, DFAstate nextState){
+		if(transitions != null){
+			transitions.put(key,nextState);
+		}
+	}
+
 	public void print(){
-		System.out.println("======={ " + name + " }=======");
+		System.out.println("======={ " + ((name == "\n")?"\\n" : name) + " }=======");
 		for (String key : this.transitions.keySet()) {
 			DFAstate state = this.transitions.get(key);
-			System.out.println("{ " + key + "\t-->\t" + ((state == null)? "null": state.name)  + " }");
+			System.out.println("{ " + ((key == "\n")?"\\n" : key) + "\t-->\t" + ((state == null)? "null": ((state.name == "\n")?"\\n" : state.name))  + " }");
 		}
 	}
 
 	public void printTransitionTable(){
-		System.out.println("======={ " + name + " }=======");
+		System.out.println("======={ " + ((name == "\n")?"\\n" : name) + " }=======");
 		List<DFAstate> list = new ArrayList<>();
 		for (String key : this.transitions.keySet()) {
 			DFAstate state = this.transitions.get(key);
-			System.out.println("{ " + key + "\t-->\t" + ((state == null)? "null": state.name)  + " }");
+			System.out.println("{ " + ((key == "\n")?"\\n" : key) + "\t-->\t" + ((state == null)? "null": ((state.name == "\n")?"\\n" : state.name))  + " \t}" + (state.isFinal? ((FinalDFAState)state).token:""));
 			if(!list.contains(state)) list.add(state);
 		}
 		for(DFAstate state : list){
-			state.printTransitionTable();
+			if(!state.equals(this)) state.printTransitionTable();
 		}
 	}
+	
 }
