@@ -3,11 +3,12 @@ import java.util.*;
 public class Main{
 
 	public static void main(String[] args) {
-		String filename = args[0];
+		String inputfile = args[0];
+		String outputfile = args[1];
 		
 		Lexer lex = new Lexer();
 
-		lex.execute(filename);
+		lex.execute(inputfile,outputfile);
 
 	}
 

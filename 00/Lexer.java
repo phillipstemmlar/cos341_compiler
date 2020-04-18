@@ -89,16 +89,23 @@ public class Lexer{
 		// automata.print();
 	}
 
-	public void execute(String filename){	
+	public void execute(String inputfile, String outputfile){	
 		
-		String input = filetoString(filename); 
+		String input = filetoString(inputfile); 
 		// String input = "   (F ) add \"aaa bbb\" or  123 not -452 and myvar1234 submultif then else while < for > eq \n input {output} halt bool = num , string proc T ;";
 		// String input = "   (F ) add \"aaa bbb\" or  123 not -452 and submultif then else while < for > eq \n input {output} halt bool = num , string proc T ;";
 		// String input = "   (F ) add or myvar1234  not and submultif then else while < for > eq \n input {output} halt bool = num , string proc T ;";
 		// String input = " afna and add adnfagfgadf ";
 
 		line();
-		boolean test = automata.evaluate(input);
+		System.out.println(inputfile + ":\n" + input);
+
+		String output = automata.evaluate(input);
+		line();
+
+		System.out.println(outputfile + ":\n" + output);
+		writeToFile(outputfile, output);
+
 		line();
 	}
 
@@ -120,6 +127,34 @@ public class Lexer{
       e.printStackTrace();
 		}
 		return file;		
+	}
+
+	private void writeToFile(String filename, String content){	
+		try {
+			FileWriter myWriter = new FileWriter(filename);		
+      myWriter.write(content);
+			myWriter.close();	
+    } catch (IOException e) {
+      System.out.println("File could not be written to: " + filename);
+			e.printStackTrace();		
+    }
+		
+		
+		// try {
+		// 	File outfile = new File(filename);
+			
+    //   if (outfile.createNewFile()) {
+    //     System.out.println("File created: " + outfile.getName());
+    //   } else {
+    //     System.out.println("File already exists.");
+		// 	}
+			
+    // } catch (IOException e) {
+    //   System.out.println("An error occurred.");
+    //   e.printStackTrace();
+		// }
+		
+
 	}
 
 	private void log(String out){

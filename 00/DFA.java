@@ -9,9 +9,9 @@ public class DFA{
 		this.startState = startState;
 	}
 
-	public Boolean evaluate(String input_str){
+	public String evaluate(String input_str){
 
-		System.out.println("INPUT: " + input_str);
+		String output = "";
 
 		Queue<Lexer.Token> tokens = new LinkedList<>();
 		Queue<String> strings = new LinkedList<>();
@@ -67,7 +67,7 @@ public class DFA{
 					savedIndex = -1;
 				}else{
 					System.out.println("ERROR");
-					return false;
+					return "";
 				}
 			}
 
@@ -80,19 +80,20 @@ public class DFA{
 			strings.add( input_str.substring(startIndex,i) );
 		}else{
 			System.out.println("ERROR");
-			return false;
+			return "";
 		}
 
-		System.out.println("----TOKENS----");
+		// System.out.println("----TOKENS----");
 
 		while(tokens.size() > 0){
 			Lexer.Token token = tokens.poll();
 			String str = strings.poll();
 			if(token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline)
-				System.out.println(token + "\t\t---->#" + str);
+				// System.out.println(token + "\t\t---->#" + str);
+				output += str + " ("  + token + ((tokens.size() > 0)?")\n" : ")"); 
 		}
 
-		return true;
+		return output;
 	}
 
 	public void addKeywordStates(String keyword, Lexer.Token token){
