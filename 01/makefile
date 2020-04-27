@@ -7,8 +7,8 @@ MAIN=Lexer
 BIN=./bin
 JAR_FILE=COS341_u18171185_P00.jar
 MANIFEST_FILE=Manifest.txt
-INPUT_FILE=lexer_input.txt
-OUTPUT_FILE=lexer_output.txt
+INPUT_FILE=parser_input.txt
+OUTPUT_FILE=parser_output.txt
 
 make: *.java
 	$(CC) *.java
