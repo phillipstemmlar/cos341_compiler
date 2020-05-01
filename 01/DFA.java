@@ -9,7 +9,150 @@ public class DFA{
 		this.startState = startState;
 	}
 
-	public String evaluate(String input_str){
+	public Lexer.Token[] evaluate(String input_str){
+		Queue<Lexer.Token> tokens = new LinkedList<>();
+		Queue<String> strings = new LinkedList<>();
+
+		DFAstate curState = startState;
+		DFAstate prevState = null;
+
+		DFAstate savedState = null;
+		int savedIndex = -1;
+
+		int i = 0;
+		int err = 0;
+		int p = 0;
+		int startIndex = i;
+
+		String errorString = Lexer.UserDefinedLiteral_Error;
+		String errorBuffer = "";
+
+		// System.out.println(blue+"----TOKENS----"+white);
+
+		while(i < input_str.length() && curState != null){
+			String c = input_str.substring(i,i+1);
+
+			prevState = curState;
+			curState = curState.transitions.get(c);
+
+			// System.out.println("Symbol: " + c);
+			// System.out.println("| " + prevState.name + "\t-- " + c + " -->\t" + ((curState==null)?"null":curState.name) + " |");
+
+			if(curState != null){
+				errorString = curState.getErrorString();
+				// System.out.println("ERR: " + errorString);
+			}
+
+			if(curState != null && curState.isFinal){
+				if(savedState == null){
+					savedState = curState;
+					savedIndex = i;
+				}
+				else if(((FinalDFAState)curState).isKeyword){
+					savedState = curState;
+					savedIndex = i;
+				}else if(savedState != null && !((FinalDFAState)savedState).isKeyword && !((FinalDFAState)curState).isKeyword){
+					savedState = curState;
+					savedIndex = i;
+				}
+			}else if(curState == null){
+				if(savedState != null){
+					Lexer.Token token =  ((FinalDFAState)savedState).token;
+					String str = input_str.substring(startIndex,i);
+					
+					if(true || token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline && token != Lexer.Token.tok_tab){
+						// log(green +token + white +"\n\t" + str);
+					}
+
+					err = p;
+					p = i;
+					// System.out.println("ERR: " + err);
+
+					tokens.add(token);
+					strings.add( str );
+					startIndex = i;
+
+					curState = startState;
+					i = savedIndex;
+					savedState = null;
+					savedIndex = -1;
+					
+					// err = i-1;
+				}else{
+					i++;
+					String buff = input_str.substring(err,i);
+					String str = removeLeadingWhitespace(buff);
+
+					int lin_num = getLineNumber(input_str,i);
+					int col_num = getColumnNumber(input_str,i);
+
+					// System.out.println("\n" + blue + "----ERROR-OUT----" + white);
+
+					// System.out.println("\nstart index: \t" + startIndex);
+					// System.out.println("saved index: \t" + startIndex);
+					// System.out.println("i: \t\t" + i);
+					// System.out.println("err: \t\t" + err);
+					// System.out.println("str: \t\t" + str);
+					// System.out.println("error str: \t" + errorString);
+					// System.out.println("error buff: \t" + errorBuffer);
+
+					// System.out.println("Line: \t\t" + lin_num);
+					// System.out.println("Column: \t" + col_num);
+
+					System.out.println("\n" + red + "Lexical Error [line: "+lin_num+", col: "+col_num+"]: '"
+						 + bold + str + red + "' " + errorString + white );
+
+					// System.out.println("\n" + blue + "----TOKENS-END----" + white);
+					return null;
+				}
+			}
+
+			i++;
+		}
+	
+		if(curState != null && curState.isFinal){
+			Lexer.Token token =  ((FinalDFAState)savedState).token;
+			String str = input_str.substring(startIndex,i);
+
+			if(token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline && token != Lexer.Token.tok_tab){
+				// log(green +token + white +"\n\t" + str);
+			}
+
+			tokens.add(((FinalDFAState)curState).token);
+			strings.add( input_str.substring(startIndex,i) );
+		}else{
+			i++;
+			String buff = input_str.substring(err,i);
+			String str = removeLeadingWhitespace(buff);
+
+			int lin_num = getLineNumber(input_str,i);
+			int col_num = getColumnNumber(input_str,i);
+
+			System.out.println("\n" + red + "Lexical Error [line: "+lin_num+", col: "+col_num+"]: '"
+					+ bold + str + red + "' " + errorString + white );
+			return null;
+		}
+
+		Lexer.Token[] output = new Lexer.Token[tokens.size()];
+		int oi = 0;
+
+		while(tokens.size() > 0){
+			Lexer.Token token = tokens.poll();
+			String str = strings.poll();
+			if(token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline && token != Lexer.Token.tok_tab){
+				// System.out.println(token + "\t\t---->#" + str);
+				// output += str + " ("  + token + ((tokens.size() > 0)?")\n" : ")"); 
+				output[oi] = token;
+				oi++;
+			}
+		}
+
+		// System.out.println(blue + "----TOKENS-END----" + white);
+
+		return output;
+	}
+
+	public String evaluateToFile(String input_str){
 
 		String output = "";
 
@@ -63,7 +206,7 @@ public class DFA{
 					Lexer.Token token =  ((FinalDFAState)savedState).token;
 					String str = input_str.substring(startIndex,i);
 					
-					if(true || token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline){
+					if(true || token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline && token != Lexer.Token.tok_tab){
 						// log(green +token + white +"\n\t" + str);
 					}
 
@@ -117,7 +260,7 @@ public class DFA{
 			Lexer.Token token =  ((FinalDFAState)savedState).token;
 			String str = input_str.substring(startIndex,i);
 
-			if(token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline){
+			if(token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline && token != Lexer.Token.tok_tab){
 				// log(green +token + white +"\n\t" + str);
 			}
 
@@ -139,7 +282,7 @@ public class DFA{
 		while(tokens.size() > 0){
 			Lexer.Token token = tokens.poll();
 			String str = strings.poll();
-			if(token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline)
+			if(token != Lexer.Token.tok_space && token != Lexer.Token.tok_newline && token != Lexer.Token.tok_tab)
 				// System.out.println(token + "\t\t---->#" + str);
 				output += str + " ("  + token + ((tokens.size() > 0)?")\n" : ")"); 
 		}
@@ -263,9 +406,9 @@ public class DFA{
 	}
 
 	private int getColumnNumber(String input, int charIndex){
-		int col = 1;
+		int col = 0;
 		for(int i = 0; i < charIndex && i < input.length(); ++i){
-			if(input.charAt(i) == '\n') col = 1;
+			if(input.charAt(i) == '\n') col = 0;
 			else col++;
 		}
 		return col;

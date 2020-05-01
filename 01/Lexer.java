@@ -3,16 +3,6 @@ import java.util.*;
 
 public class Lexer{
 
-	public static void main(String[] args) {
-		String inputfile = args[0];
-		String outputfile = args[1];
-		
-		Lexer lex = new Lexer();
-
-		lex.execute(inputfile,outputfile);
-
-	}
-
 	Boolean logging = false;
 
 	DFA automata;
@@ -44,19 +34,22 @@ public class Lexer{
 		DFAstate q3 = new FinalDFAState("int1", Token.tok_integer_literal);
 		DFAstate q4 = new NormalDFAState("int2");
 		DFAstate q5 = new FinalDFAState("int3", Token.tok_integer_literal);
+		DFAstate qZero = new FinalDFAState("intZero", Token.tok_integer_literal);
 
 		for(int i = 0; i <= 9; ++i) q5.addTransition(i+"",q5);
 		for(int i = 0; i <= 9; ++i) q3.addTransition(i+"",q5);
 
 		for(int i = 1; i <= 9; ++i) q4.addTransition(i+"",q3);
-		for(int i = 1; i <= 9; ++i) q0.addTransition(i+"",q3);
+		for(int i = 0; i <= 9; ++i) q0.addTransition(i+"",q3);
 
 		q0.addTransition("-",q4);
+		// q0.addTransition("0",qZero);
 
 		q2.setErrorString(IntegerLiteral_Error);
 		q3.setErrorString(IntegerLiteral_Error);
 		q4.setErrorString(IntegerLiteral_Error);
 		q5.setErrorString(IntegerLiteral_Error);
+		// qZero.setErrorString(IntegerLiteral_Error);
 
 		//String Literals
 
@@ -115,7 +108,12 @@ public class Lexer{
 		// automata.print();
 	}
 
-	public void execute(String inputfile, String outputfile){	
+	public Lexer.Token[] execute(String inputfile, String outputfile){	
+		String input = filetoString(inputfile); 
+		return automata.evaluate(input);
+	}
+
+	public void executeToFile(String inputfile, String outputfile){	
 		
 		String input = filetoString(inputfile); 
 		// String input = "   (F ) add \"aaa bbb\" or  123 not -452 and myvar1234 submultif then else while < for > eq \n input {output} halt bool = num , string proc T ;";
@@ -126,7 +124,7 @@ public class Lexer{
 		// line();
 		// System.out.println(inputfile + ":\n" + input);
 
-		String output = automata.evaluate(input);
+		String output = automata.evaluateToFile(input);
 		// line();
 
 		// System.out.println(outputfile + ":\n" + output);
@@ -205,8 +203,10 @@ public class Lexer{
 	public static String __quote__ = '"' + ""; 
 	public static String __space__ = " ";
 	public static String __newln__ = "\n";
+	public static String __tab__ = "\t";
 
 	public static enum Token{
+		//TERMINALS
 		tok_and,
 		tok_or,
 		tok_not,
@@ -234,6 +234,7 @@ public class Lexer{
 		tok_less_than,
 		tok_greater_than,
 		tok_space,
+		tok_tab,
 		tok_newline,
 		tok_open_parenth,
 		tok_close_parenth,
@@ -242,7 +243,26 @@ public class Lexer{
 		tok_assignment,
 		tok_comma,
 		tok_semi_colon,
-		tok_none
+		tok_none,
+		//NON-TERMINALS
+		END,			// $
+		PROG,
+		PROC_DEFS,
+		PROC,
+		CODE,
+		INSTR,
+		IO,
+		CALL,
+		DECL,
+		TYPE,
+		NAME,
+		VAR,
+		ASSIGN,
+		NUMEXPR,
+		CALC,
+		COND_BRANCH,
+		BOOL,
+		COND_LOOP
 	}
 
 	public static String[] keywords = {
@@ -276,7 +296,7 @@ public class Lexer{
 	};
 
 	public static String[] operators = {
-		"<", ">", " ", "\n", "(", ")", "{", "}", "=", ",", ";"	
+		"<", ">", " ", "\n", "(", ")", "{", "}", "=", ",", ";", "\t"
 	};
  
 	public static Token[] operatorTokens = {
@@ -290,7 +310,8 @@ public class Lexer{
 		Token.tok_close_brace,		// }
 		Token.tok_assignment,			// =
 		Token.tok_comma,					// ,
-		Token.tok_semi_colon			// ;
+		Token.tok_semi_colon,			// ;
+		Token.tok_tab							// \t
 	};
 
 
