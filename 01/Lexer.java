@@ -262,7 +262,15 @@ public class Lexer{
 		CALC,
 		COND_BRANCH,
 		BOOL,
-		COND_LOOP
+		COND_LOOP,
+		//Left-Factorization NON-TERMINALS
+		PROC_DEFS_PART,
+		PROC_DEFS_PART2,
+		CODE_PART,
+		DECL_PART,
+		VALUE_PART,
+		ELSE_PART,
+		BOOL2
 	}
 
 	public static String[] keywords = {
