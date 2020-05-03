@@ -1,11 +1,16 @@
+import java.util.*;
 public class Node{
 
 	protected Token.eToken token;
 	protected Boolean isLeafNode;
+	public Boolean incFound = true;
 
-	public Node(Token.eToken tok, Boolean leaf){
+	protected String errorString;
+
+	public Node(Token.eToken tok, Boolean leaf, String err){
 		token = tok;
 		isLeafNode = leaf;
+		errorString = err;
 	}
 
 	public Boolean isLeaf(){
@@ -18,6 +23,35 @@ public class Node{
 
 	public void set(Token.eToken tok){
 		token = tok;
+	}
+
+	public String treeString() {
+		return treeString("");
+	}
+
+	public String treeString(String prefix) {
+		return "";
+	}
+
+	public String error(){
+		return errorString;
+	}
+
+	public void error(String err){
+		errorString = err;
+	}
+
+	public String toString(){
+		return token + "";
+	}
+
+	public Node setIncludeFound(Boolean inc){
+		incFound = inc;
+		return this;
+	}
+
+	public Boolean includeFound(){
+		return incFound;
 	}
 
 }

@@ -1,9 +1,10 @@
 import java.io.*;
 import java.util.*; 
+import java.lang.Throwable;
 
 public class Lexer{
 
-	Boolean logging = false;
+	public Boolean logging = false;
 
 	DFA automata;
 
@@ -108,29 +109,20 @@ public class Lexer{
 		// automata.print();
 	}
 
-	public Queue<Token> execute(String inputfile, String outputfile){	
+	public Queue<Token> execute(String inputfile){	
 		String input = filetoString(inputfile); 
 		return automata.evaluate(input);
 	}
 
-	public void executeToFile(String inputfile, String outputfile){	
-		
+
+	public void executeToFile(String inputfile, String outputfile) throws Exception{ 	
 		String input = filetoString(inputfile); 
-		// String input = "   (F ) add \"aaa bbb\" or  123 not -452 and myvar1234 submultif then else while < for > eq \n input {output} halt bool = num , string proc T ;";
-		// String input = "   (F ) add \"aaa bbb\" or  123 not -452 and submultif then else while < for > eq \n input {output} halt bool = num , string proc T ;";
-		// String input = "   (F ) add or myvar1234  not and submultif then else while < for > eq \n input {output} halt bool = num , string proc T ;";
-		// String input = " afna and add adnfagfgadf ";
-
-		// line();
-		// System.out.println(inputfile + ":\n" + input);
-
 		String output = automata.evaluateToFile(input);
-		// line();
-
-		// System.out.println(outputfile + ":\n" + output);
-		writeToFile(outputfile, output);
-
-		// line();
+		if(output.length() == 0){
+			throw new Exception("Lexical Error");
+		}else{
+			writeToFile(outputfile, output);
+		}
 	}
 
 	private String filetoString(String filename){
@@ -163,23 +155,6 @@ public class Lexer{
       System.out.println("File could not be written to: " + filename);
 			e.printStackTrace();		
     }
-		
-		
-		// try {
-		// 	File outfile = new File(filename);
-			
-    //   if (outfile.createNewFile()) {
-    //     System.out.println("File created: " + outfile.getName());
-    //   } else {
-    //     System.out.println("File already exists.");
-		// 	}
-			
-    // } catch (IOException e) {
-    //   System.out.println("An error occurred.");
-    //   e.printStackTrace();
-		// }
-		
-
 	}
 
 	private void log(String out){

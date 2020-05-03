@@ -107,8 +107,8 @@ public class DFA{
 					// System.out.println("Line: \t\t" + lin_num);
 					// System.out.println("Column: \t" + col_num);
 
-					System.out.println("\n" + red + "Lexical Error [line: "+lin_num+", col: "+col_num+"]: '"
-						 + bold + str + red + "' " + errorString + white );
+					System.out.println("\n" + red + "Lexical Error [line: "+lin_num+", col: "+col_num+"]:\n\t\""
+						 + bold + str + red + "\" " + errorString + white );
 
 					// System.out.println("\n" + blue + "----TOKENS-END----" + white);
 					return null;
@@ -144,8 +144,8 @@ public class DFA{
 			int lin_num = getLineNumber(input_str,i);
 			int col_num = getColumnNumber(input_str,i);
 
-			System.out.println("\n" + red + "Lexical Error [line: "+lin_num+", col: "+col_num+"]: '"
-					+ bold + str + red + "' " + errorString + white );
+			System.out.println("\n" + red + "Lexical Error [line: "+lin_num+", col: "+col_num+"]:\n\t\""
+						 + bold + str + red + "\" " + errorString + white );
 			return null;
 		}
 
@@ -178,6 +178,8 @@ public class DFA{
 
 	public String evaluateToFile(String input_str){
 		Queue<Token> tokensQ = evaluate(input_str);
+		if(tokensQ == null) return null;
+
 		Token[] tokens = new Token[tokensQ.size()];
 		int inp = 0;
 		while(tokensQ.size() > 0){
@@ -313,7 +315,7 @@ public class DFA{
 			if(input.charAt(i) == '\n') col = 0;
 			else col++;
 		}
-		return col;
+		return col + 1;
 	}
 
 	private String removeLeadingWhitespace(String str){

@@ -1,31 +1,70 @@
 import java.util.*;
+import java.io.*;
 
 public class Parser {
+	public static Boolean logging = true;
+	public static Boolean erroring = true;
+	public static Boolean successing = true;
+
+	public static Boolean lexer_output = true;
+	public static String lexer_output_file =  "lexer_output.txt";
+
+	private Lexer lex = null;
+
 	public static void main(String[] args) {
 		String inputfile = args[0];
 		String outputfile = args[1];
 
-		Lexer lex = new Lexer();
-
-		lex.executeToFile(inputfile, "lexer_output.txt");
-
-		Queue<Token> tokens = lex.execute(inputfile, outputfile);
-		if(tokens == null) return;
-
 		Parser LL1 = new Parser();
-		Boolean success = LL1.parse(tokens);
+		LL1.execute(inputfile, outputfile);
+	}
+
+	public Parser(){
+		lex = new Lexer();
+	}
+
+	public void execute(String inputfile, String outputfile){
+		if(lexer_output) {
+			try{
+				lex.executeToFile(inputfile,lexer_output_file);
+			}catch(Exception e){
+				return;
+			}
+		}
+
+		Queue<Token> tokens = lex.execute(inputfile);
+		if(tokens == null) logln(red + "Lexer returned null" + white);
+
+		Node syntaxTree = parse(tokens);
 
 		line();
-		if(success){
-			System.out.println(green + "Tokens parsed successfully" + white);
+		if(syntaxTree != null){
+			success("Tokens parsed successfully");
+			exportNodeToFile(syntaxTree, outputfile);
 		}else{
-			System.out.println(red + "Tokens failed to parse" + white);
+			error("Tokens failed to parse");
 		}
 	}
 
-	private static Boolean logging = true;
 
-	public Boolean parse(Queue<Token> inputTokensQ){
+	private void exportNodeToFile(Node root, String filename){
+		//print root + children to file recursively
+		writeToFile(filename, root.treeString());
+	}
+
+	private void writeToFile(String filename, String content){	
+		if(content.length() == 0) return;
+		try {
+			FileWriter myWriter = new FileWriter(filename);		
+      myWriter.write(content);
+			myWriter.close();	
+    } catch (IOException e) {
+      System.out.println("File could not be written to: " + filename);
+			e.printStackTrace();		
+    }
+	}
+
+	public Node parse(Queue<Token> inputTokensQ){
 
 		inputTokensQ.add((Token.END()));
 		Token[] inputTokens = new Token[inputTokensQ.size()];
@@ -38,282 +77,531 @@ public class Parser {
 
 		//LL parser table
 		HashMap<Token.eToken, HashMap<Token.eToken, Integer> > table = genLL1_table();
-		Stack<Token.eToken> stack = new Stack<>(); 
+		Stack<Node> stack = new Stack<>(); 
 
+		Node root = new CompositeNode(Token.eToken.PROG, "--PROG--");
 		//Initialize symbol stack
-		stack.push(Token.eToken.END);
-		stack.push(Token.eToken.PROG);
+		stack.push(new LeafNode(Token.eToken.END,"--$--"));
+		stack.push(root);
 
 		//Initialize symbol index
 		Integer p = 0;
 
+		try{
 		while(stack.size() > 0){
-			if(p < inputTokens.length && inputTokens[p].get() == stack.peek()){
-				System.out.println("Matched symbol: " + inputTokens[p].get());
-				System.out.println("------|" + inputTokens[p].str() + "|------");
+			if(p < inputTokens.length && inputTokens[p].get() == stack.peek().get()){
+				logln("Matched symbol: " + inputTokens[p].get());
+				logln("------|" + inputTokens[p].str() + "|------");
+				if(stack.peek().isLeaf()){
+					((LeafNode)stack.peek()).val(inputTokens[p].str());
+				}		
 				p++;
 				stack.pop();
-			}else if(p >= inputTokens.length || table.get(stack.peek()).get(inputTokens[p].get()) == null){
-				System.out.println( red + "ERROR" + white);
+			}else if(p >= inputTokens.length || table.get(stack.peek().get()) == null || table.get(stack.peek().get()).get(inputTokens[p].get()) == null){
+				System.out.println(green + "ERROR ENTERED 1" + white);
 
-				// System.out.println("p-1: " + inputTokens[p-1].get());
-				// System.out.println("------|" + inputTokens[p-1].str() + "|------");
-				// System.out.println("p: " + inputTokens[p].get());
-				// System.out.println("------|" + inputTokens[p].str() + "|------");
-				// System.out.println("p+1: " + inputTokens[p+1].get());
-				// System.out.println("------|" + inputTokens[p+1].str() + "|------");
-				// System.out.println("p+2: " + inputTokens[p+2].get());
-				// System.out.println("------|" + inputTokens[p+2].str() + "|------");
+				int line = (p >= 1)? inputTokens[p-1].row : 0;
+				int col = (p >= 1)? inputTokens[p-1].col : 0;
 
-				System.out.println(Arrays.toString(stack.toArray()));
+				System.out.println(blue + stack.peek().get() + white);
 
-				return false;
+				String err = stack.peek().error();
+				String found = (stack.peek().includeFound())? " \"" + white + inputTokens[p].str() + red + "\"" : "" ;
+
+				error(err + found, line, col);
+				logln(blue + Arrays.toString(stack.toArray()) + white);
+
+				return null;
 			}else{
-				Integer rule = table.get(stack.peek()).get(inputTokens[p].get());
+				Integer rule = table.get(stack.peek().get()).get(inputTokens[p].get());
 
-				//TEMP
-				// if(rule == 8){
-				// 	System.out.println("=====================");
-				// 	System.out.println("p: " + inputTokens[p].get());
-				// 	System.out.println("------|" + inputTokens[p].str() + "|------");
-				// 	System.out.println("=====================");
-				// }
-				// if(rule == 8 && p+2 < inputTokens.length && inputTokens[p+2].get() == Token.eToken.tok_proc){
-				// 	rule = 4;
-				// 	System.out.println("==========Rule 4===========");
-				// }
-				// System.out.println("p: " + p + "\tlen: " + inputTokens.length);
-				// if(rule == 9 && p+1 < inputTokens.length && inputTokens[p+1].get() == Token.eToken.tok_close_brace){
-				// 	// rule = 3;
-				// 	System.out.println("==========Rule 9===========");
-				// }
 				if(rule == 14 && p+1 < inputTokens.length && inputTokens[p+1].get() == Token.eToken.tok_assignment){
 					rule = 15;
-					System.out.println("==========Rule 15===========");
+					logln("==========Rule 15===========");
 				}
 
-				System.out.println("Rule: " + rule);
+				Node top = null;
+				logln("Rule: " + rule);
 				switch(rule){
 					case 1:	// PROG → CODE PROC_DEFS_PART
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.PROC_DEFS_PART);
-						stack.push(Token.eToken.CODE);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.PROC_DEFS_PART, "--proc-defs-part--"));
+							cTop.addChild(new CompositeNode(Token.eToken.CODE, ""));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 2:	// PROC_DEFS_PART → ; PROC_DEFS
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.PROC_DEFS);
-						stack.push(Token.eToken.tok_semi_colon);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.PROC_DEFS, "--proc-defs--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_semi_colon, "Expected \";\" after instruction but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 3:	// PROC_DEFS_PART → ε
 						stack.pop();
 						break;
 
 					case 4:// PROC_DEFS → PROC PROC_DEFS_PART2
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.PROC_DEFS_PART2);
-						stack.push(Token.eToken.PROC);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.PROC_DEFS_PART2, "--proc-defs-part2--"));
+							cTop.addChild(new CompositeNode(Token.eToken.PROC, "--proc--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 5:// PROC_DEFS_PART2 → PROC_DEFS
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.PROC_DEFS);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.PROC_DEFS, "--proc-defs--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 6:	// PROC_DEFS_PART2 → ε
 						stack.pop();
 						break;
 
 					case 7:// PROC → proc userDefinedIdentifier { PROG }
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_brace);
-						stack.push(Token.eToken.PROG);
-						stack.push(Token.eToken.tok_open_brace);
-						stack.push(Token.eToken.tok_user_defined_identifier);
-						stack.push(Token.eToken.tok_proc);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.PROG, "--prog--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_user_defined_identifier, "User defined identifier expected after \"proc\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_proc, "Invalid token, expected \"proc\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 8:// CODE → INSTR CODE_PART
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.CODE_PART);
-						stack.push(Token.eToken.INSTR);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.CODE_PART, "Expected \";\" after instruction but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.INSTR, "--instr--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 9:// CODE_PART → ; CODE
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.CODE);
-						stack.push(Token.eToken.tok_semi_colon);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild((new CompositeNode(Token.eToken.CODE, "The last instruction of a code block should not end with a \";\"")).setIncludeFound(false));
+							cTop.addChild(new LeafNode(Token.eToken.tok_semi_colon, "Expected \";\" after instruction but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 10:// CODE_PART → ε
 						stack.pop();
 						break;
 
 					case 11:// INSTR → halt
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_halt);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_halt, "Invalid token, expected \"halt\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 12:// INSTR → DECL
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.DECL);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.DECL, "--decl--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 13:// INSTR → IO
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.IO);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.IO, "--io--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 14:// INSTR → CALL
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.CALL);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.CALL, "--call--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 15:// INSTR → ASSIGN
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.ASSIGN);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.ASSIGN, "--assign--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 16:// INSTR → COND_BRANCH
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.COND_BRANCH);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.COND_BRANCH, "--cond-branch--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 17:// INSTR → COND_LOOP
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.COND_LOOP);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.COND_LOOP, "--cond-loop--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
-					case 18:// IO → input ( VAR )
+					case 18:// IO → input ( VAR ), ""
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_input);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected ')' but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected '(' but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_input, "Invalid token, expected \"input\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 19:// IO → output ( VAR )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_output);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected ')' but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected '(' but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_output, "Invalid token, expected \"output\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 20:// DECL → TYPE NAME DECL_PART
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.DECL_PART);
-						stack.push(Token.eToken.NAME);
-						stack.push(Token.eToken.TYPE);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.DECL_PART, "--decl-part--"));
+							cTop.addChild(new CompositeNode(Token.eToken.NAME, "User defined identifier expected but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.TYPE, "Expected a valid type but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 21:// DECL_PART → ; DECL
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.DECL);
-						stack.push(Token.eToken.tok_semi_colon);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.DECL, "--decl--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_semi_colon, "Expected \";\" after decleration but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 22:// DECL_PART → ε
 						stack.pop();
 						break;
 
 					case 23:// TYPE → num
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_num);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_num, "Expected a valid type but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 24:// TYPE → string
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_string);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_string, "Expected a valid type but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 25:// TYPE → bool
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_bool);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_bool, "Expected a valid type but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 26:// CALL → userDefinedIdentifier
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_user_defined_identifier);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_user_defined_identifier, "User defined identifier expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 27:// NAME → userDefinedIdentifier
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_user_defined_identifier);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_user_defined_identifier, "User defined identifier expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 28:// VAR → userDefinedIdentifier
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_user_defined_identifier);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_user_defined_identifier, "User defined identifier expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 29:// ASSIGN → VAR = VALUE_PART
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.VALUE_PART);
-						stack.push(Token.eToken.tok_assignment);
-						stack.push(Token.eToken.VAR);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.VALUE_PART, "--value-part--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_assignment, "Invalid token, expected \"=\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 30:// VALUE_PART → stringLiteral
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_string_literal);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_string_literal, "String literal expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 31:// VALUE_PART → VAR
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.VAR);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 32:// VALUE_PART → NUMEXPR
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.NUMEXPR);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.NUMEXPR, "Number expression expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 33:// VALUE_PART → BOOL
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.BOOL);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL, "Boolean expression expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 34:// NUMEXPR → VAR
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.VAR);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 35:// NUMEXPR → integerLiteral
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_integer_literal);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_integer_literal, "Integer literal expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 36:// NUMEXPR → CALC
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.CALC);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.CALC, "--calc--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 37:// CALC → add ( NUMEXPR , NUMEXPR )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.NUMEXPR);
-						stack.push(Token.eToken.tok_comma);
-						stack.push(Token.eToken.NUMEXPR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_add);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.NUMEXPR, "Number expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_comma, "Invalid token, expected \",\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.NUMEXPR, "Number expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_add, "Invalid token, expected \"add\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 38:// CALC → sub ( NUMEXPR , NUMEXPR )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.NUMEXPR);
-						stack.push(Token.eToken.tok_comma);
-						stack.push(Token.eToken.NUMEXPR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_sub);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.NUMEXPR, "Number expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_comma, "Invalid token, expected \",\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.NUMEXPR, "Number expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_sub, "Invalid token, expected \"sub\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 39:// CALC → mult ( NUMEXPR , NUMEXPR )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.NUMEXPR);
-						stack.push(Token.eToken.tok_comma);
-						stack.push(Token.eToken.NUMEXPR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_mult);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.NUMEXPR, "Number expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_comma, "Invalid token, expected \",\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.NUMEXPR, "Number expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_mult, "Invalid token, expected \"mult\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 40:// COND_BRANCH → if ( BOOL ) then { CODE } ELSE_PART
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.ELSE_PART);
-						stack.push(Token.eToken.tok_close_brace);
-						stack.push(Token.eToken.CODE);
-						stack.push(Token.eToken.tok_open_brace);
-						stack.push(Token.eToken.tok_then);
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.BOOL);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_if);	
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.ELSE_PART, "--else-part--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.CODE, "--code--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_then, "Invalid token, expected \"then\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL, "Boolean expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_if, "Invalid token, expected \"if\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 41:// ELSE_PART → else { CODE }
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_brace);
-						stack.push(Token.eToken.CODE);
-						stack.push(Token.eToken.tok_open_brace);
-						stack.push(Token.eToken.tok_else);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.CODE, "--code--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_else, "Invalid token, expected \"else\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 42:// ELSE_PART → ε
 						stack.pop();
@@ -322,116 +610,216 @@ public class Parser {
 
 
 					case 43:// BOOL → eq ( VAR , VAR )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_comma);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_eq);System.out.println("p+1: " + inputTokens[p+1].get());
-						// System.out.println("------|" + inputTokens[p+1].str() + "|------");
-						// System.out.println("p+2: " + inputTokens[p+2].get());
-						// System.out.println("------|" + inputTokens[p+2].str() + "|------");
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_comma, "Invalid token, expected \",\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_eq, "Invalid token, expected \"e1\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 44:// BOOL → ( VAR BOOL2
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.BOOL2);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_open_parenth);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL2, "--bool2--"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 45:// BOOL2 → < VAR )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_less_than);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_less_than, "Invalid token, expected \"<\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 46:// BOOL2 → > VAR )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_greater_than);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_greater_than, "Invalid token, expected \">\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 47:// BOOL → not BOOL
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.BOOL);
-						stack.push(Token.eToken.tok_not);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL, "Boolean expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_not, "Invalid token, expected \"not\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 48:// BOOL → and ( BOOL , BOOL )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_comma);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_and);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL, "Boolean expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_comma, "Invalid token, expected \",\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL, "Boolean expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_and, "Invalid token, expected \"and\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 49:// BOOL → or ( BOOL , BOOL )
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_comma);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_or);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL, "Boolean expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_comma, "Invalid token, expected \",\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL, "Boolean expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_or, "Invalid token, expected \"or\" but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 50:// BOOL → T
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_T);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_T, "Boolean literal expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 51:// BOOL → F
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_F);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_F, "Boolean literal expected but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 52:// BOOL → VAR
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.VAR);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 
 					case 53:// COND_LOOP → while ( BOOL ) { CODE }
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_brace);
-						stack.push(Token.eToken.CODE);
-						stack.push(Token.eToken.tok_open_brace);
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.BOOL);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_while);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.CODE, "--code--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.BOOL, "Boolean expression expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_while, "--while--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					case 54:// COND_LOOP → for ( VAR = 0 ; VAR < VAR ; VAR = add ( VAR , 1 ) ) { CODE }
+						top = stack.peek();
 						stack.pop();
-						stack.push(Token.eToken.tok_close_brace);
-						stack.push(Token.eToken.CODE);
-						stack.push(Token.eToken.tok_open_brace);
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.tok_close_parenth);
-						stack.push(Token.eToken.tok_integer_literal);
-						stack.push(Token.eToken.tok_comma);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_add);
-						stack.push(Token.eToken.tok_assignment);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_semi_colon);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_less_than);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_semi_colon);
-						stack.push(Token.eToken.tok_integer_literal);
-						stack.push(Token.eToken.tok_assignment);
-						stack.push(Token.eToken.VAR);
-						stack.push(Token.eToken.tok_open_parenth);
-						stack.push(Token.eToken.tok_for);
+
+						if(!top.isLeaf()){
+							CompositeNode cTop= (CompositeNode)top;
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.CODE, "--code--"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_integer_literal, "Integer literal expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_comma, "Invalid token, expected \",\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_add, "Invalid token, expected \"add\" but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_assignment, "Invalid token, expected \"=\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_semi_colon, "Invalid token, expected ';' but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_less_than, "Invalid token, expected \"<\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_semi_colon, "Invalid token, expected ';' but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_integer_literal, "Integer literal expected but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_assignment, "Invalid token, expected \"=\" but found"));
+							cTop.addChild(new CompositeNode(Token.eToken.VAR, "Expected a variable but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_open_parenth, "Invalid token, expected '(' but found"));
+							cTop.addChild(new LeafNode(Token.eToken.tok_for, "--for--"));
+							Node[] children = cTop.childrenArray();
+							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
+						}
 						break;
 					default:
-						System.out.println("Parsing table defaulted");
-						return false;
+						error("Parsing table defaulted");
+						return null;
 				};
 			}
 		}
-		return true;
+		return root;
 
+		}catch(NullPointerException e){
+
+			// error("=======================================================");
+			// System.out.print(blue);
+
+			// System.out.println(e);
+			// System.out.println("p:  \t\t" + p);
+			// System.out.println(inputTokens[p].get() + " - " + inputTokens[p].str());
+			// System.out.println(Arrays.toString(stack.toArray()));
+
+			// //}else if(p >= inputTokens.length || table.get(stack.peek().get()).get(inputTokens[p].get()) == null){
+			// System.out.print(green);
+
+			// System.out.println(stack.peek().get());
+			// System.out.println(table.get(stack.peek().get()));
+
+			// error("=======================================================");
+
+		}
+		return null;
 	}
 
 	private HashMap<Token.eToken, HashMap<Token.eToken, Integer> > genLL1_table(){
@@ -693,11 +1081,27 @@ public class Parser {
 		return table;
 	}
 
+	private static void error(String str, int line, int col){
+		if(erroring) System.out.println(red + "Syntax Error [line:" + line + ", col:" + col + "]:\n\t" + str + white);
+	}
+
+	private static void error(String str){
+		if(erroring) System.out.println(red + str + white);
+	}
+
+	private static void success(String str){
+		if(successing) System.out.println(green + str + white);
+	}
+
+	private static void logln(String str){
+		if(logging) System.out.println(str);
+	}
+
 	private static void line(char c){
 		if(logging){
 			String ln = "";
 			for(int i = 0; i < 30; ++i) ln += c;
-			System.out.println(ln);
+			logln(ln);
 		}
 	}
 

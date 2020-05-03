@@ -1,121 +1,253 @@
-input (tok_input)
-( (tok_open_parenth)
-x (tok_user_defined_identifier)
-) (tok_close_parenth)
-; (tok_semi_colon)
-n (tok_user_defined_identifier)
-= (tok_assignment)
-x (tok_user_defined_identifier)
-; (tok_semi_colon)
-r (tok_user_defined_identifier)
-= (tok_assignment)
-"unknown" (tok_string_literal)
-; (tok_semi_colon)
-s (tok_user_defined_identifier)
-= (tok_assignment)
-"even" (tok_string_literal)
-; (tok_semi_colon)
-checknumber (tok_user_defined_identifier)
-; (tok_semi_colon)
-if (tok_if)
-( (tok_open_parenth)
-eq (tok_eq)
-( (tok_open_parenth)
-r (tok_user_defined_identifier)
-, (tok_comma)
-s (tok_user_defined_identifier)
-) (tok_close_parenth)
-) (tok_close_parenth)
-then (tok_then)
-{ (tok_open_brace)
-output (tok_output)
-( (tok_open_parenth)
-s (tok_user_defined_identifier)
-) (tok_close_parenth)
-} (tok_close_brace)
-else (tok_else)
-{ (tok_open_brace)
-output (tok_output)
-( (tok_open_parenth)
-r (tok_user_defined_identifier)
-) (tok_close_parenth)
-} (tok_close_brace)
-; (tok_semi_colon)
-halt (tok_halt)
-; (tok_semi_colon)
-proc (tok_proc)
-checknumber (tok_user_defined_identifier)
-{ (tok_open_brace)
-num (tok_num)
-zero (tok_user_defined_identifier)
-; (tok_semi_colon)
-zero (tok_user_defined_identifier)
-= (tok_assignment)
-0 (tok_integer_literal)
-; (tok_semi_colon)
-m (tok_user_defined_identifier)
-= (tok_assignment)
-n (tok_user_defined_identifier)
-; (tok_semi_colon)
-if (tok_if)
-( (tok_open_parenth)
-( (tok_open_parenth)
-m (tok_user_defined_identifier)
-< (tok_less_than)
-zero (tok_user_defined_identifier)
-) (tok_close_parenth)
-) (tok_close_parenth)
-then (tok_then)
-{ (tok_open_brace)
-m (tok_user_defined_identifier)
-= (tok_assignment)
-mult (tok_mult)
-( (tok_open_parenth)
-m (tok_user_defined_identifier)
-, (tok_comma)
--1 (tok_integer_literal)
-) (tok_close_parenth)
-} (tok_close_brace)
-; (tok_semi_colon)
-while (tok_while)
-( (tok_open_parenth)
-( (tok_open_parenth)
-m (tok_user_defined_identifier)
-< (tok_less_than)
-zero (tok_user_defined_identifier)
-) (tok_close_parenth)
-) (tok_close_parenth)
-{ (tok_open_brace)
-m (tok_user_defined_identifier)
-= (tok_assignment)
-sub (tok_sub)
-( (tok_open_parenth)
-m (tok_user_defined_identifier)
-, (tok_comma)
-2 (tok_integer_literal)
-) (tok_close_parenth)
-} (tok_close_brace)
-; (tok_semi_colon)
-if (tok_if)
-( (tok_open_parenth)
-eq (tok_eq)
-( (tok_open_parenth)
-m (tok_user_defined_identifier)
-, (tok_comma)
-zero (tok_user_defined_identifier)
-) (tok_close_parenth)
-) (tok_close_parenth)
-then (tok_then)
-{ (tok_open_brace)
-r (tok_user_defined_identifier)
-= (tok_assignment)
-"even" (tok_string_literal)
-} (tok_close_brace)
-else (tok_else)
-{ (tok_open_brace)
-r (tok_user_defined_identifier)
-= (tok_assignment)
-"odd" (tok_string_literal)
-} (tok_close_brace)
-; (tok_semi_colon)
-} (tok_close_brace)
+PROG
+├──CODE
+|  ├──INSTR
+|  |  └──IO
+|  |     ├──tok_input 'input'
+|  |     ├──tok_open_parenth '('
+|  |     ├──VAR
+|  |     |  └──tok_user_defined_identifier 'x'
+|  |     └──tok_close_parenth ')'
+|  └──CODE_PART
+|     ├──tok_semi_colon ';'
+|     └──CODE
+|        ├──INSTR
+|        |  └──ASSIGN
+|        |     ├──VAR
+|        |     |  └──tok_user_defined_identifier 'n'
+|        |     ├──tok_assignment '='
+|        |     └──VALUE_PART
+|        |        └──VAR
+|        |           └──tok_user_defined_identifier 'x'
+|        └──CODE_PART
+|           ├──tok_semi_colon ';'
+|           └──CODE
+|              ├──INSTR
+|              |  └──ASSIGN
+|              |     ├──VAR
+|              |     |  └──tok_user_defined_identifier 'r'
+|              |     ├──tok_assignment '='
+|              |     └──VALUE_PART
+|              |        └──tok_string_literal '"unknown"'
+|              └──CODE_PART
+|                 ├──tok_semi_colon ';'
+|                 └──CODE
+|                    ├──INSTR
+|                    |  └──ASSIGN
+|                    |     ├──VAR
+|                    |     |  └──tok_user_defined_identifier 's'
+|                    |     ├──tok_assignment '='
+|                    |     └──VALUE_PART
+|                    |        └──tok_string_literal '"even"'
+|                    └──CODE_PART
+|                       ├──tok_semi_colon ';'
+|                       └──CODE
+|                          ├──INSTR
+|                          |  └──CALL
+|                          |     └──tok_user_defined_identifier 'checknumber'
+|                          └──CODE_PART
+|                             ├──tok_semi_colon ';'
+|                             └──CODE
+|                                ├──INSTR
+|                                |  └──COND_BRANCH
+|                                |     ├──tok_if 'if'
+|                                |     ├──tok_open_parenth '('
+|                                |     ├──BOOL
+|                                |     |  ├──tok_eq 'eq'
+|                                |     |  ├──tok_open_parenth '('
+|                                |     |  ├──VAR
+|                                |     |  |  └──tok_user_defined_identifier 'r'
+|                                |     |  ├──tok_comma ','
+|                                |     |  ├──VAR
+|                                |     |  |  └──tok_user_defined_identifier 's'
+|                                |     |  └──tok_close_parenth ')'
+|                                |     ├──tok_close_parenth ')'
+|                                |     ├──tok_then 'then'
+|                                |     ├──tok_open_brace '{'
+|                                |     ├──CODE
+|                                |     |  ├──INSTR
+|                                |     |  |  └──IO
+|                                |     |  |     ├──tok_output 'output'
+|                                |     |  |     ├──tok_open_parenth '('
+|                                |     |  |     ├──VAR
+|                                |     |  |     |  └──tok_user_defined_identifier 's'
+|                                |     |  |     └──tok_close_parenth ')'
+|                                |     |  └──CODE_PART
+|                                |     ├──tok_close_brace '}'
+|                                |     └──ELSE_PART
+|                                |        ├──tok_else 'else'
+|                                |        ├──tok_open_brace '{'
+|                                |        ├──CODE
+|                                |        |  ├──INSTR
+|                                |        |  |  └──IO
+|                                |        |  |     ├──tok_output 'output'
+|                                |        |  |     ├──tok_open_parenth '('
+|                                |        |  |     ├──VAR
+|                                |        |  |     |  └──tok_user_defined_identifier 'r'
+|                                |        |  |     └──tok_close_parenth ')'
+|                                |        |  └──CODE_PART
+|                                |        └──tok_close_brace '}'
+|                                └──CODE_PART
+|                                   ├──tok_semi_colon ';'
+|                                   └──CODE
+|                                      ├──INSTR
+|                                      |  └──tok_halt 'halt'
+|                                      └──CODE_PART
+|                                         ├──tok_semi_colon ';'
+|                                         └──CODE
+|                                            ├──PROC
+|                                            |  ├──tok_proc 'proc'
+|                                            |  ├──tok_user_defined_identifier 'checknumber'
+|                                            |  ├──tok_open_brace '{'
+|                                            |  ├──PROG
+|                                            |  |  ├──CODE
+|                                            |  |  |  ├──INSTR
+|                                            |  |  |  |  └──DECL
+|                                            |  |  |  |     ├──TYPE
+|                                            |  |  |  |     |  └──tok_num 'num'
+|                                            |  |  |  |     ├──NAME
+|                                            |  |  |  |     |  └──tok_user_defined_identifier 'zero'
+|                                            |  |  |  |     └──DECL_PART
+|                                            |  |  |  |        ├──tok_semi_colon ';'
+|                                            |  |  |  |        └──DECL
+|                                            |  |  |  |           ├──VAR
+|                                            |  |  |  |           |  └──tok_user_defined_identifier 'zero'
+|                                            |  |  |  |           ├──tok_assignment '='
+|                                            |  |  |  |           └──VALUE_PART
+|                                            |  |  |  |              └──NUMEXPR
+|                                            |  |  |  |                 └──tok_integer_literal '0'
+|                                            |  |  |  └──CODE_PART
+|                                            |  |  |     ├──tok_semi_colon ';'
+|                                            |  |  |     └──CODE
+|                                            |  |  |        ├──INSTR
+|                                            |  |  |        |  └──ASSIGN
+|                                            |  |  |        |     ├──VAR
+|                                            |  |  |        |     |  └──tok_user_defined_identifier 'm'
+|                                            |  |  |        |     ├──tok_assignment '='
+|                                            |  |  |        |     └──VALUE_PART
+|                                            |  |  |        |        └──VAR
+|                                            |  |  |        |           └──tok_user_defined_identifier 'n'
+|                                            |  |  |        └──CODE_PART
+|                                            |  |  |           ├──tok_semi_colon ';'
+|                                            |  |  |           └──CODE
+|                                            |  |  |              ├──INSTR
+|                                            |  |  |              |  └──COND_BRANCH
+|                                            |  |  |              |     ├──tok_if 'if'
+|                                            |  |  |              |     ├──tok_open_parenth '('
+|                                            |  |  |              |     ├──BOOL
+|                                            |  |  |              |     |  ├──tok_open_parenth '('
+|                                            |  |  |              |     |  ├──VAR
+|                                            |  |  |              |     |  |  └──tok_user_defined_identifier 'm'
+|                                            |  |  |              |     |  └──BOOL2
+|                                            |  |  |              |     |     ├──tok_less_than '<'
+|                                            |  |  |              |     |     ├──VAR
+|                                            |  |  |              |     |     |  └──tok_user_defined_identifier 'zero'
+|                                            |  |  |              |     |     └──tok_close_parenth ')'
+|                                            |  |  |              |     ├──tok_close_parenth ')'
+|                                            |  |  |              |     ├──tok_then 'then'
+|                                            |  |  |              |     ├──tok_open_brace '{'
+|                                            |  |  |              |     ├──CODE
+|                                            |  |  |              |     |  ├──INSTR
+|                                            |  |  |              |     |  |  └──ASSIGN
+|                                            |  |  |              |     |  |     ├──VAR
+|                                            |  |  |              |     |  |     |  └──tok_user_defined_identifier 'm'
+|                                            |  |  |              |     |  |     ├──tok_assignment '='
+|                                            |  |  |              |     |  |     └──VALUE_PART
+|                                            |  |  |              |     |  |        └──NUMEXPR
+|                                            |  |  |              |     |  |           └──CALC
+|                                            |  |  |              |     |  |              ├──tok_mult 'mult'
+|                                            |  |  |              |     |  |              ├──tok_open_parenth '('
+|                                            |  |  |              |     |  |              ├──NUMEXPR
+|                                            |  |  |              |     |  |              |  └──VAR
+|                                            |  |  |              |     |  |              |     └──tok_user_defined_identifier 'm'
+|                                            |  |  |              |     |  |              ├──tok_comma ','
+|                                            |  |  |              |     |  |              ├──NUMEXPR
+|                                            |  |  |              |     |  |              |  └──tok_integer_literal '-1'
+|                                            |  |  |              |     |  |              └──tok_close_parenth ')'
+|                                            |  |  |              |     |  └──CODE_PART
+|                                            |  |  |              |     ├──tok_close_brace '}'
+|                                            |  |  |              |     └──ELSE_PART
+|                                            |  |  |              └──CODE_PART
+|                                            |  |  |                 ├──tok_semi_colon ';'
+|                                            |  |  |                 └──CODE
+|                                            |  |  |                    ├──INSTR
+|                                            |  |  |                    |  └──COND_LOOP
+|                                            |  |  |                    |     ├──tok_while 'while'
+|                                            |  |  |                    |     ├──tok_open_parenth '('
+|                                            |  |  |                    |     ├──BOOL
+|                                            |  |  |                    |     |  ├──tok_open_parenth '('
+|                                            |  |  |                    |     |  ├──VAR
+|                                            |  |  |                    |     |  |  └──tok_user_defined_identifier 'm'
+|                                            |  |  |                    |     |  └──BOOL2
+|                                            |  |  |                    |     |     ├──tok_less_than '<'
+|                                            |  |  |                    |     |     ├──VAR
+|                                            |  |  |                    |     |     |  └──tok_user_defined_identifier 'zero'
+|                                            |  |  |                    |     |     └──tok_close_parenth ')'
+|                                            |  |  |                    |     ├──tok_close_parenth ')'
+|                                            |  |  |                    |     ├──tok_open_brace '{'
+|                                            |  |  |                    |     ├──CODE
+|                                            |  |  |                    |     |  ├──INSTR
+|                                            |  |  |                    |     |  |  └──ASSIGN
+|                                            |  |  |                    |     |  |     ├──VAR
+|                                            |  |  |                    |     |  |     |  └──tok_user_defined_identifier 'm'
+|                                            |  |  |                    |     |  |     ├──tok_assignment '='
+|                                            |  |  |                    |     |  |     └──VALUE_PART
+|                                            |  |  |                    |     |  |        └──NUMEXPR
+|                                            |  |  |                    |     |  |           └──CALC
+|                                            |  |  |                    |     |  |              ├──tok_sub 'sub'
+|                                            |  |  |                    |     |  |              ├──tok_open_parenth '('
+|                                            |  |  |                    |     |  |              ├──NUMEXPR
+|                                            |  |  |                    |     |  |              |  └──VAR
+|                                            |  |  |                    |     |  |              |     └──tok_user_defined_identifier 'm'
+|                                            |  |  |                    |     |  |              ├──tok_comma ','
+|                                            |  |  |                    |     |  |              ├──NUMEXPR
+|                                            |  |  |                    |     |  |              |  └──tok_integer_literal '2'
+|                                            |  |  |                    |     |  |              └──tok_close_parenth ')'
+|                                            |  |  |                    |     |  └──CODE_PART
+|                                            |  |  |                    |     └──tok_close_brace '}'
+|                                            |  |  |                    └──CODE_PART
+|                                            |  |  |                       ├──tok_semi_colon ';'
+|                                            |  |  |                       └──CODE
+|                                            |  |  |                          ├──INSTR
+|                                            |  |  |                          |  └──COND_BRANCH
+|                                            |  |  |                          |     ├──tok_if 'if'
+|                                            |  |  |                          |     ├──tok_open_parenth '('
+|                                            |  |  |                          |     ├──BOOL
+|                                            |  |  |                          |     |  ├──tok_eq 'eq'
+|                                            |  |  |                          |     |  ├──tok_open_parenth '('
+|                                            |  |  |                          |     |  ├──VAR
+|                                            |  |  |                          |     |  |  └──tok_user_defined_identifier 'm'
+|                                            |  |  |                          |     |  ├──tok_comma ','
+|                                            |  |  |                          |     |  ├──VAR
+|                                            |  |  |                          |     |  |  └──tok_user_defined_identifier 'zero'
+|                                            |  |  |                          |     |  └──tok_close_parenth ')'
+|                                            |  |  |                          |     ├──tok_close_parenth ')'
+|                                            |  |  |                          |     ├──tok_then 'then'
+|                                            |  |  |                          |     ├──tok_open_brace '{'
+|                                            |  |  |                          |     ├──CODE
+|                                            |  |  |                          |     |  ├──INSTR
+|                                            |  |  |                          |     |  |  └──ASSIGN
+|                                            |  |  |                          |     |  |     ├──VAR
+|                                            |  |  |                          |     |  |     |  └──tok_user_defined_identifier 'r'
+|                                            |  |  |                          |     |  |     ├──tok_assignment '='
+|                                            |  |  |                          |     |  |     └──VALUE_PART
+|                                            |  |  |                          |     |  |        └──tok_string_literal '"even"'
+|                                            |  |  |                          |     |  └──CODE_PART
+|                                            |  |  |                          |     ├──tok_close_brace '}'
+|                                            |  |  |                          |     └──ELSE_PART
+|                                            |  |  |                          |        ├──tok_else 'else'
+|                                            |  |  |                          |        ├──tok_open_brace '{'
+|                                            |  |  |                          |        ├──CODE
+|                                            |  |  |                          |        |  ├──INSTR
+|                                            |  |  |                          |        |  |  └──ASSIGN
+|                                            |  |  |                          |        |  |     ├──VAR
+|                                            |  |  |                          |        |  |     |  └──tok_user_defined_identifier 'r'
+|                                            |  |  |                          |        |  |     ├──tok_assignment '='
+|                                            |  |  |                          |        |  |     └──VALUE_PART
+|                                            |  |  |                          |        |  |        └──tok_string_literal '"odd"'
+|                                            |  |  |                          |        |  └──CODE_PART
+|                                            |  |  |                          |        └──tok_close_brace '}'
+|                                            |  |  |                          └──CODE_PART
+|                                            |  |  └──PROC_DEFS_PART
+|                                            |  └──tok_close_brace '}'
+|                                            └──PROC_DEFS_PART2
+└──PROC_DEFS_PART

@@ -11,7 +11,7 @@ if (eq(r, s)) then {
 };
 halt;
 
-proc checknumber {
+proc 1234 {
   num zero;
   zero = 0;
   m = n;
