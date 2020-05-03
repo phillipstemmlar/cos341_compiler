@@ -17,11 +17,9 @@ proc checknumber {
   m = n;
   
 	if (( m < zero ))
-  then { m = mult(m, -1) };
-  
+    then { m = mult(m, -1) };
 	while ((m < zero)) { m = sub(m, 2) };
-  
 	if (eq(m, zero))
-  then { r = "even" }
-  else { r = "odd" };
+    then { r = "even" }
+    else { r = "odd" }
 }

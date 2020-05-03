@@ -9,13 +9,13 @@ public class Lexer{
 
 	public Lexer(){
 
-		DFAstate q0 = new FinalDFAState("start", Token.tok_none);
+		DFAstate q0 = new FinalDFAState("start", Token.eToken.tok_none);
 		q0.setErrorString(InvalidCharacter_Error);
 
 		//User defined identifiers
 
-		DFAstate q1 = new FinalDFAState("udi0", Token.tok_user_defined_identifier);
-		DFAstate q6 = new FinalDFAState("udi1", Token.tok_user_defined_identifier);
+		DFAstate q1 = new FinalDFAState("udi0", Token.eToken.tok_user_defined_identifier);
+		DFAstate q6 = new FinalDFAState("udi1", Token.eToken.tok_user_defined_identifier);
 
 		for(char i = 'a'; i <= 'z'; ++i) q6.addTransition(i + "", q6);
 		for(int i = 0; i <= 9; ++i) q6.addTransition(i + "", q6);
@@ -30,11 +30,11 @@ public class Lexer{
 
 		//Integer literals
 
-		DFAstate q2 = new FinalDFAState("int0", Token.tok_integer_literal);
-		DFAstate q3 = new FinalDFAState("int1", Token.tok_integer_literal);
+		DFAstate q2 = new FinalDFAState("int0", Token.eToken.tok_integer_literal);
+		DFAstate q3 = new FinalDFAState("int1", Token.eToken.tok_integer_literal);
 		DFAstate q4 = new NormalDFAState("int2");
-		DFAstate q5 = new FinalDFAState("int3", Token.tok_integer_literal);
-		DFAstate qZero = new FinalDFAState("intZero", Token.tok_integer_literal);
+		DFAstate q5 = new FinalDFAState("int3", Token.eToken.tok_integer_literal);
+		DFAstate qZero = new FinalDFAState("intZero", Token.eToken.tok_integer_literal);
 
 		for(int i = 0; i <= 9; ++i) q5.addTransition(i+"",q5);
 		for(int i = 0; i <= 9; ++i) q3.addTransition(i+"",q5);
@@ -53,7 +53,7 @@ public class Lexer{
 
 		//String Literals
 
-		DFAstate q9 = new FinalDFAState("q9", Token.tok_string_literal);
+		DFAstate q9 = new FinalDFAState("q9", Token.eToken.tok_string_literal);
 		q9.setErrorString(StringLiteral_Error);
 
 		DFAstate qS = null;
@@ -84,7 +84,7 @@ public class Lexer{
 		//Add keywords
 		for(int i = 0 ;i < keywords.length; ++i){
 			if(keywords[i] == "T" || keywords[i] == "F") automata.addKeywordStates(keywords[i], keywordTokens[i]);
-			else automata.addKeywordStates(keywords[i], keywordTokens[i], q6, Token.tok_user_defined_identifier);
+			else automata.addKeywordStates(keywords[i], keywordTokens[i], q6, Token.eToken.tok_user_defined_identifier);
 		}
 
 		// //Add operators
@@ -93,10 +93,10 @@ public class Lexer{
 		}
 
 		
-		// automata.addKeywordStates("add", Token.tok_add, q6, Token.tok_user_defined_identifier);
-		// automata.addKeywordStates("and", Token.tok_and, q6, Token.tok_user_defined_identifier);
+		// automata.addKeywordStates("add", Token.eToken.tok_add, q6, Token.eToken.tok_user_defined_identifier);
+		// automata.addKeywordStates("and", Token.eToken.tok_and, q6, Token.eToken.tok_user_defined_identifier);
 
-		// automata.addKeywordStates(" ", Token.tok_space);
+		// automata.addKeywordStates(" ", Token.eToken.tok_space);
 
 		for(char i = 'a'; i <= 'z'; ++i){
 			if(!q0.transitions.containsKey(i+"")){
@@ -108,7 +108,7 @@ public class Lexer{
 		// automata.print();
 	}
 
-	public Lexer.Token[] execute(String inputfile, String outputfile){	
+	public Queue<Token> execute(String inputfile, String outputfile){	
 		String input = filetoString(inputfile); 
 		return automata.evaluate(input);
 	}
@@ -205,73 +205,7 @@ public class Lexer{
 	public static String __newln__ = "\n";
 	public static String __tab__ = "\t";
 
-	public static enum Token{
-		//TERMINALS
-		tok_and,
-		tok_or,
-		tok_not,
-		tok_add,
-		tok_sub,
-		tok_mult,
-		tok_if,
-		tok_then,
-		tok_else,
-		tok_while,
-		tok_for,
-		tok_eq,
-		tok_input,
-		tok_output,
-		tok_halt,
-		tok_num,
-		tok_bool,
-		tok_string,
-		tok_proc,
-		tok_T,
-		tok_F,
-		tok_user_defined_identifier,
-		tok_string_literal,
-		tok_integer_literal,
-		tok_less_than,
-		tok_greater_than,
-		tok_space,
-		tok_tab,
-		tok_newline,
-		tok_open_parenth,
-		tok_close_parenth,
-		tok_open_brace,
-		tok_close_brace,
-		tok_assignment,
-		tok_comma,
-		tok_semi_colon,
-		tok_none,
-		//NON-TERMINALS
-		END,			// $
-		PROG,
-		PROC_DEFS,
-		PROC,
-		CODE,
-		INSTR,
-		IO,
-		CALL,
-		DECL,
-		TYPE,
-		NAME,
-		VAR,
-		ASSIGN,
-		NUMEXPR,
-		CALC,
-		COND_BRANCH,
-		BOOL,
-		COND_LOOP,
-		//Left-Factorization NON-TERMINALS
-		PROC_DEFS_PART,
-		PROC_DEFS_PART2,
-		CODE_PART,
-		DECL_PART,
-		VALUE_PART,
-		ELSE_PART,
-		BOOL2
-	}
+	
 
 	public static String[] keywords = {
 		"and", "or", "not", "add", "sub", "mult", "if",
@@ -279,47 +213,47 @@ public class Lexer{
 		"halt", "num", "bool","string", "proc", "T", "F"
 	};
 
-	public static Token[] keywordTokens = {
-		Token.tok_and,
-		Token.tok_or,
-		Token.tok_not,
-		Token.tok_add,
-		Token.tok_sub,
-		Token.tok_mult,
-		Token.tok_if,
-		Token.tok_then,
-		Token.tok_else,
-		Token.tok_while,
-		Token.tok_for,
-		Token.tok_eq,
-		Token.tok_input,
-		Token.tok_output,
-		Token.tok_halt,
-		Token.tok_num,
-		Token.tok_bool,
-		Token.tok_string,
-		Token.tok_proc,
-		Token.tok_T,
-		Token.tok_F
+	public static Token.eToken[] keywordTokens = {
+		Token.eToken.tok_and,
+		Token.eToken.tok_or,
+		Token.eToken.tok_not,
+		Token.eToken.tok_add,
+		Token.eToken.tok_sub,
+		Token.eToken.tok_mult,
+		Token.eToken.tok_if,
+		Token.eToken.tok_then,
+		Token.eToken.tok_else,
+		Token.eToken.tok_while,
+		Token.eToken.tok_for,
+		Token.eToken.tok_eq,
+		Token.eToken.tok_input,
+		Token.eToken.tok_output,
+		Token.eToken.tok_halt,
+		Token.eToken.tok_num,
+		Token.eToken.tok_bool,
+		Token.eToken.tok_string,
+		Token.eToken.tok_proc,
+		Token.eToken.tok_T,
+		Token.eToken.tok_F
 	};
 
 	public static String[] operators = {
 		"<", ">", " ", "\n", "(", ")", "{", "}", "=", ",", ";", "\t"
 	};
  
-	public static Token[] operatorTokens = {
-		Token.tok_less_than,			// <
-		Token.tok_greater_than,		// >
-		Token.tok_space,					// " "
-		Token.tok_newline,				// \n
-		Token.tok_open_parenth,		// (
-		Token.tok_close_parenth,	// )
-		Token.tok_open_brace,			// {
-		Token.tok_close_brace,		// }
-		Token.tok_assignment,			// =
-		Token.tok_comma,					// ,
-		Token.tok_semi_colon,			// ;
-		Token.tok_tab							// \t
+	public static Token.eToken[] operatorTokens = {
+		Token.eToken.tok_less_than,			// <
+		Token.eToken.tok_greater_than,		// >
+		Token.eToken.tok_space,					// " "
+		Token.eToken.tok_newline,				// \n
+		Token.eToken.tok_open_parenth,		// (
+		Token.eToken.tok_close_parenth,	// )
+		Token.eToken.tok_open_brace,			// {
+		Token.eToken.tok_close_brace,		// }
+		Token.eToken.tok_assignment,			// =
+		Token.eToken.tok_comma,					// ,
+		Token.eToken.tok_semi_colon,			// ;
+		Token.eToken.tok_tab							// \t
 	};
 
 
@@ -332,23 +266,23 @@ public class Lexer{
 
 /*
 		//User-Defined Identifiers
-		DFAstate q6 = new FinalDFAState("q6", Token.tok_user_defined_identifier);
+		DFAstate q6 = new FinalDFAState("q6", Token.eToken.tok_user_defined_identifier);
 		for(char i = 'a'; i <= 'z'; ++i)q6.transitions.put(i + "", q6);
 		for(int i = 0; i <= 9 ; ++i) q6.transitions.put(i + "", q6);
 
-		DFAstate q1 = new FinalDFAState("q1", Token.tok_user_defined_identifier);
+		DFAstate q1 = new FinalDFAState("q1", Token.eToken.tok_user_defined_identifier);
 		for(char i = 'a'; i <= 'z'; ++i)q1.transitions.put(i + "", q6);
 		for(int i = 0; i <= 9 ; ++i) q1.transitions.put(i + "", q6);
 
 		for(char i = 'a'; i <= 'z'; ++i) q0.transitions.put(i + "", q1);
 
 		//Integer Literals
-		DFAstate q2 = new FinalDFAState("q2", Token.tok_integer_literal);
+		DFAstate q2 = new FinalDFAState("q2", Token.eToken.tok_integer_literal);
 
-		DFAstate q5 = new FinalDFAState("q5", Token.tok_integer_literal);
+		DFAstate q5 = new FinalDFAState("q5", Token.eToken.tok_integer_literal);
 		for(int i = 0; i <= 9 ; ++i) q5.transitions.put(i + "", q5);
 
-		DFAstate q3 = new FinalDFAState("q3", Token.tok_integer_literal);
+		DFAstate q3 = new FinalDFAState("q3", Token.eToken.tok_integer_literal);
 		for(int i = 0; i <= 9 ; ++i) q3.transitions.put(i + "", q5);
 
 		DFAstate q4 = new NormalDFAState("q4");
@@ -359,7 +293,7 @@ public class Lexer{
 		q0.transitions.put("-",q4);
 
 		//String Literals
-		DFAstate q9 = new FinalDFAState("q9", Token.tok_string_literal);
+		DFAstate q9 = new FinalDFAState("q9", Token.eToken.tok_string_literal);
 
 		DFAstate qS = null;
 		DFAstate qP = new NormalDFAState("q16");
