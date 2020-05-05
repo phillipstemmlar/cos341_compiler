@@ -1,14 +1,14 @@
 import java.util.*;
-public class LeafNode extends Node{
+public class LeafSyntaxNode extends SyntaxNode{
 
 	private String value = "";
 
-	public LeafNode(Token.eToken tok, String err){
+	public LeafSyntaxNode(Token.eToken tok, String err){
 		super(tok, true, err);
 		value = "";
 	}
 
-	public LeafNode(Token.eToken tok, String err, String val){
+	public LeafSyntaxNode(Token.eToken tok, String err, String val){
 		super(tok, true, err);
 		value = val;
 	}

@@ -1,26 +1,26 @@
 import java.util.*;
-public class CompositeNode extends Node{
+public class CompositeSyntaxNode extends SyntaxNode{
 
-	List<Node> children;
+	List<SyntaxNode> children;
 
-	public CompositeNode(Token.eToken tok, String err){
+	public CompositeSyntaxNode(Token.eToken tok, String err){
 		super(tok, false, err);
 		children = new ArrayList<>();
 	}
 
-	public void addChild(Node child){
+	public void addChild(SyntaxNode child){
 		// children.add(child);
 		children.add(0,child);
 	}
 
-	public Node getChild(int index){
+	public SyntaxNode getChild(int index){
 		return children.get(index);
 	}
 
-	public Node[] childrenArray(){
+	public SyntaxNode[] childrenArray(){
 		if(children.size() == 0) return null;
 
-		Node[] array = new Node[children.size()];
+		SyntaxNode[] array = new SyntaxNode[children.size()];
 		for(int i = 0; i < children.size(); ++i){
 			array[children.size() -1 -i] = children.get(i);
 		}
@@ -32,14 +32,14 @@ public class CompositeNode extends Node{
 		tree += token + "\n";
 
 		for(int i = 0; i < children.size(); ++i){
-			Node child = children.get(i);
+			SyntaxNode child = children.get(i);
 			tree += prefix;
 			tree += (i < children.size()-1)? "├──" : "└──" ;
 			if(child.isLeaf()){
-				tree += ((LeafNode)child).treeString(prefix + ((i < children.size()-1)? "|  " : "   "));
+				tree += ((LeafSyntaxNode)child).treeString(prefix + ((i < children.size()-1)? "|  " : "   "));
 				tree += "\n";
 			}else{
-				tree += ((CompositeNode)child).treeString(prefix + ((i < children.size()-1)? "|  " : "   "));
+				tree += ((CompositeSyntaxNode)child).treeString(prefix + ((i < children.size()-1)? "|  " : "   "));
 			}
 		}
 		return tree;

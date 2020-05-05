@@ -1,5 +1,5 @@
 import java.util.*;
-public class Node{
+public class SyntaxNode{
 
 	protected Token.eToken token;
 	protected Boolean isLeafNode;
@@ -7,7 +7,7 @@ public class Node{
 
 	protected String errorString;
 
-	public Node(Token.eToken tok, Boolean leaf, String err){
+	public SyntaxNode(Token.eToken tok, Boolean leaf, String err){
 		token = tok;
 		isLeafNode = leaf;
 		errorString = err;
@@ -45,7 +45,7 @@ public class Node{
 		return token + "";
 	}
 
-	public Node setIncludeFound(Boolean inc){
+	public SyntaxNode setIncludeFound(Boolean inc){
 		incFound = inc;
 		return this;
 	}

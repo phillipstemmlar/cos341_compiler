@@ -7,8 +7,8 @@ MAIN=Lexer
 BIN=./bin
 JAR_FILE=COS341_u18171185_P00.jar
 MANIFEST_FILE=Manifest.txt
-INPUT_FILE=lexer_input.txt
-OUTPUT_FILE=lexer_output.txt
+INPUT_FILE=example_input.txt
+OUTPUT_FILE=example_output.txt
 
 make: *.java
 	$(CC) *.java
@@ -38,4 +38,4 @@ again: make
 	make run
 
 tar:
-	tar -cvz makefile Manifest.txt *.java bin -f ${TAR_DIR}/${TAR_FILE}
+	tar -cvz makefile Manifest.txt ReadMe.txt *.java ${BIN}/${JAR_FILE} -f ${TAR_DIR}/${TAR_FILE}
