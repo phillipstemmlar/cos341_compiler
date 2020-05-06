@@ -1,0 +1,27 @@
+num n;
+num zero;
+zero = 0;
+
+while (T) {
+  input(n);
+  if (or((n < zero), eq(n, zero))) then {
+    halt
+  } else {
+    fib
+  }
+};
+
+proc fib {
+  num a;
+  num b;
+  a = 1;
+  b = 1;
+  while ((n > zero)) {
+    num temp;
+    temp = a;
+    a = add(a, b);
+    b = temp;
+    n = sub(n, 1)
+  };
+  output(b)
+}

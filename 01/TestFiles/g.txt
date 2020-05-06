@@ -1,0 +1,31 @@
+num rax;
+num rbx;
+num rcx;
+num zero;
+zero = 0;
+
+while (T) {
+  input(rbx);
+  input(rcx);
+  if (or(or((rbx < zero), (rcx < zero)), or(eq(rbx, zero), eq(rcx, zero)))) then {
+    halt
+  };
+  div;
+  output(rax)
+};
+
+
+proc div {
+  if (not eq(rbx, rcx)) then {
+    rax = 0;
+    while ((rbx > zero)) {
+      rax = add(rax, 1);
+      rbx = sub(rbx, rcx)
+    };
+    if ((rbx < zero)) then {
+      rax = sub(rax, 1)
+    }
+  } else {
+    rax = 1
+  }
+}

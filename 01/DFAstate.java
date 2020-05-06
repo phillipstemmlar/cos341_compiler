@@ -5,7 +5,7 @@ public class DFAstate{
 	public Boolean isFinal;
 	public String name;
 
-	private String errorString = Lexer.UserDefinedLiteral_Error;
+	private String errorString = Lexer.defaultError;
 
 	public DFAstate(Boolean fin, String name){
 		transitions = new HashMap<>();

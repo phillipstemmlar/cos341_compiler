@@ -56,9 +56,9 @@ public class Parser {
 		HashMap<Token.eToken, HashMap<Token.eToken, Integer> > table = genLL1_table();
 		Stack<SyntaxNode> stack = new Stack<>(); 
 
-		SyntaxNode root = new CompositeSyntaxNode(Token.eToken.PROG, "--PROG--");
+		SyntaxNode root = new CompositeSyntaxNode(Token.eToken.PROG, "Program source started with invalid token");
 		//Initialize symbol stack
-		stack.push(new LeafSyntaxNode(Token.eToken.END,"--$--"));
+		stack.push(new LeafSyntaxNode(Token.eToken.END,"Program source ended with invalid token"));
 		stack.push(root);
 
 		//Initialize symbol index
@@ -66,14 +66,14 @@ public class Parser {
 		while(stack.size() > 0){
 			if(p < inputTokens.length && inputTokens[p].get() == stack.peek().get()){
 				Helper.logln("Matched symbol: " + inputTokens[p].get());
-				Helper.logln("------|" + inputTokens[p].str() + "|------");
+				Helper.logln("=======|" + inputTokens[p].str() + "|=======");
 				if(stack.peek().isLeaf()){
 					((LeafSyntaxNode)stack.peek()).val(inputTokens[p].str());
 				}		
 				p++;
 				stack.pop();
 			}else if(p >= inputTokens.length || table.get(stack.peek().get()) == null || table.get(stack.peek().get()).get(inputTokens[p].get()) == null){
-				String err = stack.peek().error() + ((stack.peek().includeFound())? " \"" + Helper.bold + inputTokens[p].str() + Helper.red + "\"" : "" );
+				String err = stack.peek().error() + ((stack.peek().includeFound())? ((inputTokens[p].str() == "$")? " the end of the source file" :" \"" + inputTokens[p].str() + "\"" ): "" );
 				Helper.error(PREFIX,(p >= 1)? inputTokens[p-1].row : 0, (p >= 1)? inputTokens[p-1].col : 0, err);
 				return null;
 			}else{
@@ -97,7 +97,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC_DEFS_PART, "--proc-defs-part--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC_DEFS_PART, "Expected \";\" after instruction/procedure but found"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, ""));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
@@ -109,8 +109,8 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC_DEFS, "--proc-defs--"));
-							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_semi_colon, "Expected \";\" after instruction but found"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC_DEFS, "Expected \";\" after instruction/procedure but found"));
+							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_semi_colon, "Expected \";\" after instruction/procedure but found"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -125,8 +125,8 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC_DEFS_PART2, "--proc-defs-part2--"));
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC, "--proc--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC_DEFS_PART2, "Expected \";\" after procedure but found"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC, "Procedures must start with the \"proc\" keyword. and not"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -137,7 +137,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC_DEFS, "--proc-defs--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROC_DEFS, "Expected \";\" after procedure but found"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -153,7 +153,7 @@ public class Parser {
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROG, "--prog--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.PROG, "Program source ended with invalid token"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "User defined identifier expected after \"proc\" but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_proc, "Invalid token, expected \"proc\" but found"));
@@ -169,7 +169,7 @@ public class Parser {
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE_PART, "Expected \";\" after instruction but found"));
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.INSTR, "--instr--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.INSTR, "Instruction started with an invalid token of "));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -207,7 +207,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.DECL, "--INSTR->decl--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.DECL, "Decleration must start with a type, which this is not"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -218,7 +218,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.IO, "--io--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.IO, "IO instructions must start with either \"input\" or \"output\", and not"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -229,7 +229,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CALL, "--call--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CALL, "Instructions that call a procedure must start with a procedure name, and not"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -240,7 +240,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.ASSIGN, "--assign--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.ASSIGN, "Cannot assign the the left hand side, it is not a variable"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -251,7 +251,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.COND_BRANCH, "--cond-branch--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.COND_BRANCH, "IF-THEN and IF-THEN-ELSE instructions must start with \"if\" and not with"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -262,7 +262,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.COND_LOOP, "--cond-loop--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.COND_LOOP, "Loop instructions must start with either \"for\" or \"while\" and not with"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -303,7 +303,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.DECL_PART, "--decl-part--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.DECL_PART, "Decleration must start with a type, which this is not"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.NAME, "User defined identifier expected but found"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.TYPE, "Expected a valid type but found"));
 							SyntaxNode[] children = cTop.childrenArray();
@@ -316,7 +316,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.INSTR, "--dp -> decl--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.INSTR, "Decleration must start with a type, which this is not"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_semi_colon, "Expected \";\" after decleration but found"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
@@ -402,7 +402,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.VALUE_PART, "--value-part--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.VALUE_PART, "Only expressions can be assign to a variable, this cannot "));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_assignment, "Invalid token, expected \"=\" but found"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.VAR, "Expected a variable but found"));
 							SyntaxNode[] children = cTop.childrenArray();
@@ -482,7 +482,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CALC, "--calc--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CALC, "Calculation expressions must start with either \"add\", \"sub\" or \"mult\", and not with"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -543,9 +543,9 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.ELSE_PART, "--else-part--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.ELSE_PART, "Expected a \";\" or an \"else\" after IF-THEN statement, but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, "--code--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, "Instruction cannot start with expresion"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_then, "Invalid token, expected \"then\" but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
@@ -564,7 +564,7 @@ public class Parser {
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, "--code--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, "Instruction cannot start with expresion"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_else, "Invalid token, expected \"else\" but found"));
 							SyntaxNode[] children = cTop.childrenArray();
@@ -600,7 +600,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.BOOL2, "--bool2--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.BOOL2, "Boolean operator \"<\" or \">\" expected, but found"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.VAR, "Expected a variable but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
 							SyntaxNode[] children = cTop.childrenArray();
@@ -719,12 +719,12 @@ public class Parser {
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, "--code--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, "Instruction cannot start with expresion"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.BOOL, "Boolean expression expected but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_open_parenth, "Invalid token, expected \"(\" but found"));
-							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_while, "--while--"));
+							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_while, "While loop instructions must start with \"while\" and not with"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -736,7 +736,7 @@ public class Parser {
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_brace, "Invalid token, expected \"}\" but found"));
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, "--code--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.CODE, "Instruction cannot start with expresion"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_open_brace, "Invalid token, expected \"{\" but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_close_parenth, "Invalid token, expected \")\" but found"));
@@ -748,6 +748,7 @@ public class Parser {
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_assignment, "Invalid token, expected \"=\" but found"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.VAR, "Expected a variable but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_semi_colon, "Invalid token, expected ';' but found"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.VAR, "Expected a variable but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_less_than, "Invalid token, expected \"<\" but found"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.VAR, "Expected a variable but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_semi_colon, "Invalid token, expected ';' but found"));
@@ -755,7 +756,7 @@ public class Parser {
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_assignment, "Invalid token, expected \"=\" but found"));
 							cTop.addChild(new CompositeSyntaxNode(Token.eToken.VAR, "Expected a variable but found"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_open_parenth, "Invalid token, expected '(' but found"));
-							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_for, "--for--"));
+							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_for, "For loop instructions must start with \"for\" and not with"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -832,6 +833,7 @@ public class Parser {
 		table.get(Token.eToken.CODE).put(Token.eToken.tok_halt, 8);
 		table.get(Token.eToken.CODE).put(Token.eToken.tok_num, 8);
 		table.get(Token.eToken.CODE).put(Token.eToken.tok_string, 8);
+		table.get(Token.eToken.CODE).put(Token.eToken.tok_bool, 8);
 		table.get(Token.eToken.CODE).put(Token.eToken.tok_halt, 8);
 		table.get(Token.eToken.CODE).put(Token.eToken.tok_input, 8);
 		table.get(Token.eToken.CODE).put(Token.eToken.tok_output, 8);
@@ -1003,6 +1005,7 @@ public class Parser {
 		table.get(Token.eToken.ELSE_PART).put(Token.eToken.tok_else, 41);
 
 		table.get(Token.eToken.ELSE_PART).put(Token.eToken.tok_semi_colon, 42);
+		table.get(Token.eToken.ELSE_PART).put(Token.eToken.tok_close_brace, 42);
 		table.get(Token.eToken.ELSE_PART).put(Token.eToken.END, 42);
 
 		/*
@@ -1017,6 +1020,7 @@ public class Parser {
 		table.get(Token.eToken.BOOL).put(Token.eToken.tok_or, 49);
 		table.get(Token.eToken.BOOL).put(Token.eToken.tok_T, 50);
 		table.get(Token.eToken.BOOL).put(Token.eToken.tok_F, 51);
+		table.get(Token.eToken.BOOL).put(Token.eToken.tok_user_defined_identifier, 52);
 
 		/*
 		BOOL2	

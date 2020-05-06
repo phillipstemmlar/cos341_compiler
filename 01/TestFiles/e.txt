@@ -1,0 +1,35 @@
+
+string result;
+
+num zero;
+num a;
+num b;
+
+zero = 0;
+a = 1;
+b = 2;
+
+num two;
+two = 2;
+
+num p;
+num q;
+
+p = mult(a, two);
+q = mult(b, two);
+
+if ( and(eq(p, b), eq(q, a)) ) then {
+  result = "a eq b"
+} else {
+  bool x; 
+  x = or((a < b), (a > b));
+  bool y; 
+  y = and((a < b), (a > b));
+  if (eq(x, y)) then {
+    result = "x eq y"
+  } else {
+    result = "x xor y"
+  }
+};
+
+output(result)

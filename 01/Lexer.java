@@ -10,7 +10,7 @@ public class Lexer{
 	public Lexer(String prefix){
 		PREFIX = prefix;
 		DFAstate q0 = new FinalDFAState("start", Token.eToken.tok_none);
-		q0.setErrorString(InvalidCharacter_Error);
+		q0.setErrorString(defaultError);
 
 		//User defined identifiers
 
@@ -186,4 +186,5 @@ public class Lexer{
 	public static final String IntegerLiteral_Error = "integer contains illegal characters";
 	public static final String StringLiteral_Error = "string contains illegal characters";
 	public static final String StringLiteralLength_Error = "strings have at most 8 characters";
+	public static final String defaultError = "token contains illegal characters";
 }
