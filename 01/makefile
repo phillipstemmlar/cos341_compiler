@@ -17,6 +17,7 @@ make: *.java
 jar: make
 	echo ${MANIFEST_CONTENT} > ${MANIFEST_FILE}
 	$(JAR) cmvf $(MANIFEST_FILE) $(JAR_FILE) *.class 
+	mkdir ${BIN}
 	mv $(JAR_FILE) ${BIN} 
 	cp -n $(INPUT_FILE) $(OUTPUT_FILE) ${BIN} 2>/dev/null
 
@@ -30,7 +31,7 @@ clean:
 	-rm -f *.class $(OUTPUT_FILE) *_output.txt Manifest.txt
 
 wipe: clean
-	-rm -f ${BIN}/*
+	-rm -f -r ${BIN}
 
 rs:
 	-rm -f $(OUTPUT_FILE) ${BIN}/${JAR_FILE}
