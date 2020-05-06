@@ -1,2 +1,8 @@
 *.class
 .~*
+
+*_output.txt
+Manifest.txt
+bin/
+*.tar
+*.tar.gz
