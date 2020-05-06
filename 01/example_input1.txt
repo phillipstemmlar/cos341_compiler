@@ -1,0 +1,3 @@
+num i;
+input(i);
+output(i)

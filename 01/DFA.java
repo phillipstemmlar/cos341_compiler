@@ -43,7 +43,8 @@ public class DFA{
 					savedState = curState;
 					savedIndex = i;
 				}
-			}else if(curState == null){
+			}
+			if(curState == null){
 				if(savedState != null){
 					Token.eToken token =  ((FinalDFAState)savedState).token;
 					String str = input_str.substring(startIndex,i);
@@ -128,12 +129,13 @@ public class DFA{
 							curState = new FinalDFAState(keyword.toCharArray()[i] + "" + i, token,isKeyword);
 							prevState.transitions.put(keyword.toCharArray()[i]+"", curState);
 						}else{
-							curState = new FinalDFAState(keyword.toCharArray()[i] + "" + i, intermediateToken);				
+							curState = new FinalDFAState(keyword.toCharArray()[i] + "" + i, intermediateToken);			
+							
+							for(char c = 'a'; c <= 'z'; ++c){
+								if( ! curState.transitions.containsKey(c+"")) curState.addTransition(c + "", nextState);
+							}
+							for(int c = 0; c <= 9 && prevState != startState; ++c) curState.addTransition(c + "", nextState);	
 						}
-						for(char c = 'a'; c <= 'z'; ++c){
-							if( ! curState.transitions.containsKey(c+"")) curState.addTransition(c + "", nextState);
-						}
-						for(int c = 0; c <= 9 && prevState != startState; ++c) curState.addTransition(c + "", nextState);
 						prevState.transitions.put(keyword.toCharArray()[i] + "", curState);
 						prevState = curState;
 					}else{
@@ -142,7 +144,7 @@ public class DFA{
 				}else{
 					if(i == keyword.length()-1){
 						curState = new FinalDFAState(keyword.toCharArray()[i] + "" + i, token,isKeyword);
-						prevState.transitions.put(keyword.toCharArray()[i]+"", curState);
+						// prevState.transitions.put(keyword.toCharArray()[i]+"", curState);
 					}else{
 						curState = new FinalDFAState(keyword.toCharArray()[i] + "" + i, intermediateToken);
 					}	

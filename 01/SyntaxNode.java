@@ -6,11 +6,54 @@ public class SyntaxNode{
 	public Boolean incFound = true;
 
 	protected String errorString;
+	protected CompositeSyntaxNode parent;
+
+	protected Integer index;
+	protected static Integer indexCount = 0;
 
 	public SyntaxNode(Token.eToken tok, Boolean leaf, String err){
 		token = tok;
 		isLeafNode = leaf;
 		errorString = err;
+		parent = null;
+		index = -1;
+	}
+
+	public void genIndex(){
+		if(parent == null) indexCount = 0;
+		index = indexCount;
+		indexCount++;
+	}
+
+	public String treeIndexString(){
+		return "";
+	}
+	public String symbolTableString(){
+		SortedMap<Integer, String> table = symbolTable(new TreeMap<>());
+		String output = "";
+		for(Integer key: table.keySet()){
+			String value = table.get(key);
+			if(value != null)output += key + ":" + value + "\n";
+		}
+		return output;
+	}
+
+	protected SortedMap<Integer, String> symbolTable( SortedMap<Integer, String> table){
+		if(table != null && index >= 0){
+			table.put(index, name2());
+		}
+		return table;
+	}
+
+	public void prune(){
+	}
+
+	public String name(){
+		return index + " " + token + "";
+	}
+
+	public String name2(){
+		return token + "";
 	}
 
 	public Boolean isLeaf(){
@@ -26,11 +69,11 @@ public class SyntaxNode{
 	}
 
 	public String treeString() {
-		return treeString("");
+		return "└──" + treeString("   ");
 	}
 
 	public String treeString(String prefix) {
-		return "";
+		return name();
 	}
 
 	public String error(){
@@ -42,7 +85,7 @@ public class SyntaxNode{
 	}
 
 	public String toString(){
-		return token + "";
+		return name();
 	}
 
 	public SyntaxNode setIncludeFound(Boolean inc){

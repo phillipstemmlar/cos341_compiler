@@ -1,47 +1,41 @@
 import java.util.*;
 
 public class Parser {
-	public static String PREFIX = "Syntax Error";
-	public static Boolean lexer_output = false;
-	public static String lexer_output_file =  "lexer_output.txt";
-
-	private Lexer lex = null;
-
+	private static String PREFIX;
 	public SyntaxNode syntaxTree = null;
 
-	public static void main(String[] args) {
-		String inputfile = args[0];
-		String outputfile = args[1];
+	public Parser(String prefix){PREFIX = prefix;}
 
-		Parser LL1 = new Parser();
-		Boolean success = LL1.executeToFile(inputfile, outputfile, lexer_output);
+	public SyntaxNode execute(List<Token> tokensQ){
+		if(tokensQ != null){
+			syntaxTree = parse(tokensQ);
+			if(syntaxTree != null) {
+				syntaxTree.genIndex();
+				syntaxTree.prune();
+				return syntaxTree;
+			}
+		}
+		return null;
 	}
 
-	public Parser(){
-		lex = new Lexer();
+	public SyntaxNode executeToFile(List<Token> tokensQ,String  Parser_SyntaxTree_output_file,String  Parser_SymbolTable_output_file,String  Parser_SyntaxTree_vis_output_fle){
+		syntaxTree = execute(tokensQ);
+		if(syntaxTree != null){
+			exportSyntaxTreeAndSymbolTable(syntaxTree, Parser_SyntaxTree_output_file, Parser_SymbolTable_output_file);
+			exportSyntaxNodeToFile(syntaxTree, Parser_SyntaxTree_vis_output_fle);
+			return syntaxTree;
+		}
+		return null;
 	}
 
-	public Boolean execute(String inputfile, Boolean outputLexer){
-		Boolean success = false;
-		if(outputLexer) {
-			success = lex.executeToFile(inputfile,lexer_output_file);
-		}else{
-			success = lex.execute(inputfile);
-		}
-		if(success){
-			syntaxTree = parse(lex.tokensQ);
-			if(syntaxTree != null) return true;
-		}
-		return false;
-	}
+	private void exportSyntaxTreeAndSymbolTable(SyntaxNode root, String treeFile, String symbolfile){
+		if(root != null){
+			String out = root.treeIndexString();
+			// System.out.println(out);
 
-	public Boolean executeToFile(String inputfile, String outputfile, Boolean outputLexer){
-		Boolean success = execute(inputfile, outputLexer);
-		if(success){
-			exportSyntaxNodeToFile(syntaxTree, outputfile);
-			return true;
+			Helper.writeToFile(treeFile, out);
+			Helper.writeToFile(symbolfile, root.symbolTableString());
 		}
-		return false;
 	}
 
 	private void exportSyntaxNodeToFile(SyntaxNode root, String filename){
@@ -69,8 +63,6 @@ public class Parser {
 
 		//Initialize symbol index
 		Integer p = 0;
-
-		try{
 		while(stack.size() > 0){
 			if(p < inputTokens.length && inputTokens[p].get() == stack.peek().get()){
 				Helper.logln("Matched symbol: " + inputTokens[p].get());
@@ -81,27 +73,20 @@ public class Parser {
 				p++;
 				stack.pop();
 			}else if(p >= inputTokens.length || table.get(stack.peek().get()) == null || table.get(stack.peek().get()).get(inputTokens[p].get()) == null){
-				// System.out.println(green + "ERROR ENTERED 1" + white);
-
-				int line = (p >= 1)? inputTokens[p-1].row : 0;
-				int col = (p >= 1)? inputTokens[p-1].col : 0;
-
-				// System.out.println(blue + stack.peek().get() + white);
-
-				String err = stack.peek().error();
-				String found = (stack.peek().includeFound())? " \"" + Helper.bold + inputTokens[p].str() + Helper.red + "\"" : "" ;
-
-				Helper.error(PREFIX,line, col, err + found);
-				// Helper.logln(blue + Arrays.toString(stack.toArray()) + white);
-
+				String err = stack.peek().error() + ((stack.peek().includeFound())? " \"" + Helper.bold + inputTokens[p].str() + Helper.red + "\"" : "" );
+				Helper.error(PREFIX,(p >= 1)? inputTokens[p-1].row : 0, (p >= 1)? inputTokens[p-1].col : 0, err);
 				return null;
 			}else{
 				Integer rule = table.get(stack.peek().get()).get(inputTokens[p].get());
 
 				if(rule == 14 && p+1 < inputTokens.length && inputTokens[p+1].get() == Token.eToken.tok_assignment){
 					rule = 15;
-					// Helper.logln("==========Rule 15===========");
 				}
+				if(rule == 21 && inputTokens[p+1].get() != Token.eToken.tok_num && inputTokens[p+1].get() 
+								!= Token.eToken.tok_string && inputTokens[p+1].get() != Token.eToken.tok_bool){
+					rule = 22;
+				}
+
 
 				SyntaxNode top = null;
 				Helper.logln("Rule: " + rule);
@@ -222,7 +207,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.DECL, "--decl--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.DECL, "--INSTR->decl--"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
 						}
@@ -331,7 +316,7 @@ public class Parser {
 
 						if(!top.isLeaf()){
 							CompositeSyntaxNode cTop= (CompositeSyntaxNode)top;
-							cTop.addChild(new CompositeSyntaxNode(Token.eToken.DECL, "--decl--"));
+							cTop.addChild(new CompositeSyntaxNode(Token.eToken.INSTR, "--dp -> decl--"));
 							cTop.addChild(new LeafSyntaxNode(Token.eToken.tok_semi_colon, "Expected \";\" after decleration but found"));
 							SyntaxNode[] children = cTop.childrenArray();
 							for(int i = 0; i < children.length; ++i)	stack.push(children[i]);
@@ -782,27 +767,6 @@ public class Parser {
 			}
 		}
 		return root;
-
-		}catch(NullPointerException e){
-
-			// Helper.error("=======================================================");
-			// System.out.print(blue);
-
-			// System.out.println(e);
-			// System.out.println("p:  \t\t" + p);
-			// System.out.println(inputTokens[p].get() + " - " + inputTokens[p].str());
-			// System.out.println(Arrays.toString(stack.toArray()));
-
-			// //}else if(p >= inputTokens.length || table.get(stack.peek().get()).get(inputTokens[p].get()) == null){
-			// System.out.print(green);
-
-			// System.out.println(stack.peek().get());
-			// System.out.println(table.get(stack.peek().get()));
-
-			// Helper.error("=======================================================");
-
-		}
-		return null;
 	}
 
 	private HashMap<Token.eToken, HashMap<Token.eToken, Integer> > genLL1_table(){
@@ -925,7 +889,16 @@ public class Parser {
 		table.get(Token.eToken.DECL).put(Token.eToken.tok_bool, 20);
 
 		//TEMP Cheat
-		table.get(Token.eToken.DECL).put(Token.eToken.tok_user_defined_identifier, 29);
+		// table.get(Token.eToken.DECL).put(Token.eToken.tok_user_defined_identifier, 29);
+		table.get(Token.eToken.DECL).put(Token.eToken.tok_user_defined_identifier, 15);
+		
+		// table.get(Token.eToken.DECL).put(Token.eToken.tok_user_defined_identifier, 22);
+		// table.get(Token.eToken.DECL).put(Token.eToken.tok_input, 22);
+		// table.get(Token.eToken.DECL).put(Token.eToken.tok_output, 22);
+		// table.get(Token.eToken.DECL).put(Token.eToken.tok_halt, 22);
+		// table.get(Token.eToken.DECL).put(Token.eToken.tok_if, 22);
+		// table.get(Token.eToken.DECL).put(Token.eToken.tok_for, 22);
+		// table.get(Token.eToken.DECL).put(Token.eToken.tok_while, 22);
 
 		/*
 		DECL_PART	

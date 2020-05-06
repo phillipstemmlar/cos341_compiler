@@ -3,12 +3,12 @@ import java.util.*;
 
 public class Lexer{
 
-	public static String PREFIX = "Lexical Error";
-
+	public static String PREFIX;
 	DFA automata = null;
 	public List<Token> tokensQ = null;
 
-	public Lexer(){
+	public Lexer(String prefix){
+		PREFIX = prefix;
 		DFAstate q0 = new FinalDFAState("start", Token.eToken.tok_none);
 		q0.setErrorString(InvalidCharacter_Error);
 
@@ -40,16 +40,16 @@ public class Lexer{
 		for(int i = 0; i <= 9; ++i) q3.addTransition(i+"",q5);
 
 		for(int i = 1; i <= 9; ++i) q4.addTransition(i+"",q3);
-		for(int i = 0; i <= 9; ++i) q0.addTransition(i+"",q3);
+		for(int i = 1; i <= 9; ++i) q0.addTransition(i+"",q3);
 
 		q0.addTransition("-",q4);
-		// q0.addTransition("0",qZero);
+		q0.addTransition("0",qZero);
 
 		q2.setErrorString(IntegerLiteral_Error);
 		q3.setErrorString(IntegerLiteral_Error);
 		q4.setErrorString(IntegerLiteral_Error);
 		q5.setErrorString(IntegerLiteral_Error);
-		// qZero.setErrorString(IntegerLiteral_Error);
+		qZero.setErrorString(IntegerLiteral_Error);
 
 		//String Literals
 
@@ -97,23 +97,22 @@ public class Lexer{
 		}
 	}
 
-	public Boolean execute(String inputfile){	
-		if(automata == null) return false;
+	public List<Token> execute(String inputfile){	
+		if(automata == null) return null;
 		tokensQ = automata.evaluate(Helper.filetoString(inputfile));
-		if(tokensQ == null) return false;
-		return true;
+		return tokensQ;
 	}
 
 
-	public Boolean executeToFile(String inputfile, String outputfile){ 	
-		if(automata == null) return false;
-		Boolean success = execute(inputfile);
-		if(success){
+	public List<Token> executeToFile(String inputfile, String outputfile){ 	
+		if(automata == null) return null;
+		tokensQ = execute(inputfile);
+		if(tokensQ != null){
 			String output = stringifyTokens();
 			Helper.writeToFile(outputfile, output);
-			return true;
+			return tokensQ;
 		}
-		return false;
+		return null;
 	}
 
 	private String stringifyTokens(){
