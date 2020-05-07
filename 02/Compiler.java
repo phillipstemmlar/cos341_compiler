@@ -7,6 +7,10 @@ public class Compiler {
 	private static final String Parser_SyntaxTree_output_file = "Parser_SyntaxTree_output.txt";
 	private static final String Parser_SymbolTable_output_file = "Parser_SymbolTable_output.txt";
 
+	private static final String Scoper_SyntaxTree_vis_output_fle = "Scoper_SyntaxTree_Visualized_output.txt";
+	private static final String Scoper_SyntaxTree_output_file = "Scoper_SyntaxTree_output.txt";
+	private static final String Scoper_SymbolTable_output_file = "Scoper_SymbolTable_output.txt";
+
 	private static final String LEXER_PREFIX = "Lexical Error";
 	private static final String PARSER_PREFIX = "Syntax Error";
 
@@ -22,6 +26,7 @@ public class Compiler {
 	
 	private Lexer lexer;
 	private Parser parser;
+	private Scoper scoper;
 
 	public List<Token> tokensQ = null;
 	public SyntaxNode syntaxTree = null;
@@ -35,6 +40,9 @@ public class Compiler {
 		tokensQ = lexer.executeToFile(inputfile,Lexer_output_file);
 		if(tokensQ != null){
 			syntaxTree = parser.executeToFile(tokensQ, Parser_SyntaxTree_output_file, Parser_SymbolTable_output_file, Parser_SyntaxTree_vis_output_fle);
+			if(syntaxTree != null){
+				scoper.excute(syntaxTree);
+			}
 		}
 	}
 
