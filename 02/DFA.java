@@ -22,7 +22,7 @@ public class DFA{
 		int p = 0;
 		int startIndex = i;
 
-		String errorString = Lexer.UserDefinedLiteral_Error;
+		String errorString = Lexer.defaultError;
 
 		while(i < input_str.length() && curState != null){
 			String c = input_str.substring(i,i+1);
@@ -59,7 +59,7 @@ public class DFA{
 				}else{
 					i++;
 					String str = Helper.removeLeadingWhitespace(input_str.substring(err,i));
-					Helper.error(Lexer.PREFIX, Helper.getLineNumber(input_str,i), Helper.getColumnNumber(input_str,i), "\"" + Helper.bold + str + Helper.red + "\" " + errorString);
+					Helper.error(Lexer.PREFIX, Helper.getLineNumber(input_str,i), Helper.getColumnNumber(input_str,i), "\"" + str + "\" " + errorString);
 					return null;
 				}
 			}
@@ -72,7 +72,7 @@ public class DFA{
 		}else{
 			i++;
 			String str = Helper.removeLeadingWhitespace(input_str.substring(err,i));
-			Helper.error(Lexer.PREFIX, Helper.getLineNumber(input_str,i), Helper.getColumnNumber(input_str,i),  "\"" + Helper.bold + str + Helper.red + "\" " + errorString);
+			Helper.error(Lexer.PREFIX, Helper.getLineNumber(input_str,i), Helper.getColumnNumber(input_str,i),  "\"" + str + "\" " + errorString);
 			return null;
 		}
 		List<Token> filter = new ArrayList<>();
@@ -89,7 +89,7 @@ public class DFA{
 		final boolean isKeyword = true;
 		if(keyword.length() <= 1){
 			DFAstate state = new FinalDFAState(keyword,token,isKeyword);
-			state.setErrorString(Lexer.UserDefinedLiteral_Error);	
+			state.setErrorString(Lexer.defaultError);	
 			startState.transitions.put(keyword, state);
 		}else{
 			DFAstate curState = null;
@@ -103,7 +103,7 @@ public class DFA{
 					}else{
 						curState = new NormalDFAState(keyword.toCharArray()[i] + "" + i);
 					}
-					curState.setErrorString(Lexer.UserDefinedLiteral_Error);
+					curState.setErrorString(Lexer.defaultError);
 					prevState.transitions.put(keyword.toCharArray()[i]+"", curState);
 					prevState = curState;
 				}

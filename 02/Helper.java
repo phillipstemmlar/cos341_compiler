@@ -61,12 +61,28 @@ public class Helper{
 		return col + 1;
 	}
 
+	private static String boldQuotes(String msg){
+		Boolean first = true;
+		String newMsg = "";
+		char[] msgc = msg.toCharArray();
+		for (int i = 0; i < msgc.length; ++i){
+			char c = msgc[i];
+			String cstr = c + "";
+			if(c == '\"'){
+				cstr = (first? c + bold: red + c);
+				first = !first;
+			}
+			newMsg += cstr;
+		}
+		return newMsg;
+	}
+
 	public static void error(String prefix, int line, int col, String msg){
-		if(erroring)System.out.println(red + prefix + " [line:" + line + ", col:" + col + "]:\n\t" + msg + white);
+		if(erroring)System.out.println(red + prefix + " [line:" + line + ", col:" + col + "]:\n\t" + boldQuotes(msg) + white);
 	}
 
 	public static void error(String msg){
-		if(erroring)System.out.println(red + msg + white);
+		if(erroring)System.out.println(red + boldQuotes(msg) + white);
 	}
 
 	public static void success(String str){

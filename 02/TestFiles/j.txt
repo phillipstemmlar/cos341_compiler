@@ -1,0 +1,54 @@
+
+num a;
+num b;
+
+string plus;
+string minus;
+string times;
+plus = "add";
+minus = "sub";
+times = "mult";
+
+num c;
+c = 0;
+
+string asknum;
+asknum = "number";
+string askop;
+askop = "operator";
+
+
+output(asknum);
+input(a);
+output(asknum);
+input(b);
+string op;
+output(askop);
+input(op);
+if (eq(op, plus)) then {
+  c = add(a, b)
+} else {
+  if (eq(op, minus)) then {
+    c = sub(a, b)
+  } else {
+    c = mult(a, b)
+  }
+};
+output(c);
+
+while (T) {
+  output(asknum);
+  input(a);
+  output(askop);
+  input(op);
+  if (eq(op, plus)) then {
+    c = add(c, a)
+  } else {
+    if (eq(op, minus)) then {
+      c = sub(c, a)
+    } else {
+      c = mult(c, a)
+    }
+  };
+  output(c)
+}

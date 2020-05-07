@@ -1,15 +1,17 @@
 CC=javac
 JAR=jar
 EXE=java
-TAR_FILE=COS341_u18171185_P02.tar
+PROJECT_NAME=COS341_u18171185_P02
+TAR_FILE=${PROJECT_NAME}.tar
 TAR_DIR=..
 MAIN=Compiler
 BIN=./bin
-JAR_FILE=COS341_u18171185_P02.jar
+TestFileDir=./TestFiles
+JAR_FILE=${PROJECT_NAME}.jar
 MANIFEST_FILE=Manifest.txt
 MANIFEST_CONTENT="Main-Class: ${MAIN}"
-INPUT_FILE=example_input.txt
-OUTPUT_FILE=example_output.txt
+INPUT_FILE=${TestFileDir}/example_input.txt
+OUTPUT_FILE=*_output.txt Manifest.txt
 
 make: *.java
 	$(CC) *.java
@@ -17,20 +19,20 @@ make: *.java
 jar: make
 	echo ${MANIFEST_CONTENT} > ${MANIFEST_FILE}
 	$(JAR) cmvf $(MANIFEST_FILE) $(JAR_FILE) *.class 
+	mkdir -p ${BIN}
 	mv $(JAR_FILE) ${BIN} 
-	cp -n $(INPUT_FILE) $(OUTPUT_FILE) ${BIN} 2>/dev/null
 
 run: 
 	$(EXE) $(MAIN) $(INPUT_FILE)
 
 exec:
-	${EXE} -${JAR} ${BIN}/${JAR_FILE} ${BIN}/$(INPUT_FILE)
+	${EXE} -${JAR} ${BIN}/${JAR_FILE} $(INPUT_FILE)
 
 clean:
-	-rm -f *.class $(OUTPUT_FILE) *_output.txt Manifest.txt
+	-rm -f *.class $(OUTPUT_FILE)
 
 wipe: clean
-	-rm -f ${BIN}/*
+	-rm -f -r ${BIN}
 
 rs:
 	-rm -f $(OUTPUT_FILE) ${BIN}/${JAR_FILE}

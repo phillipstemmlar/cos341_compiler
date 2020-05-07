@@ -1,0 +1,11 @@
+num a;
+num m;
+num q;
+input(m);
+input(q);
+
+a = mult(369, sub(mult(mult(m, 381), q), 141));
+
+output(a);
+
+halt

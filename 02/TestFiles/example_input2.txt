@@ -1,0 +1,9 @@
+if ((r > s))
+then
+{  r = add(1,s) };
+
+r = "1111";
+
+for(r = 0; r < s; r = add(r,1)){
+	s = r
+}

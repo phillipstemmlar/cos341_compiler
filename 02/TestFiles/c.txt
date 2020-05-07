@@ -1,0 +1,22 @@
+
+num factorialresult;
+num factorialn;
+
+factorialn = 7;
+factorial;
+
+output(factorialresult);
+
+proc factorial {
+  num i;
+  num j;
+  j = factorialn;
+  factorialresult = j;
+  factorialn = sub(factorialn, 1);
+  
+  for (i = 0; i < factorialn; i = add(i, 1)) {
+    j = sub(j, 1);
+    factorialresult = mult(factorialresult, j)
+  }
+}
+    

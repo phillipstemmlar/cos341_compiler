@@ -9,7 +9,6 @@ public class Compiler {
 
 	private static final String LEXER_PREFIX = "Lexical Error";
 	private static final String PARSER_PREFIX = "Syntax Error";
-	private static final String SCOPER_PREFIX = "Scoping Error";
 
 	public static void main(String[] args) {
 		if(args.length >= 1){
@@ -23,7 +22,6 @@ public class Compiler {
 	
 	private Lexer lexer;
 	private Parser parser;
-	private Scoper scoper;
 
 	public List<Token> tokensQ = null;
 	public SyntaxNode syntaxTree = null;
@@ -31,16 +29,12 @@ public class Compiler {
 	private Compiler(){
 		lexer = new Lexer(LEXER_PREFIX);
 		parser = new Parser(PARSER_PREFIX);
-		scoper = new Scoper(SCOPER_PREFIX);
 	}
 
 	public void compile(){
 		tokensQ = lexer.executeToFile(inputfile,Lexer_output_file);
 		if(tokensQ != null){
 			syntaxTree = parser.executeToFile(tokensQ, Parser_SyntaxTree_output_file, Parser_SymbolTable_output_file, Parser_SyntaxTree_vis_output_fle);
-			if(syntaxTree != null){
-				scoper.execute(syntaxTree);
-			}
 		}
 	}
 
