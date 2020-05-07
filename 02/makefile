@@ -43,3 +43,8 @@ again: make
 
 tar:
 	tar -cvz makefile ReadMe.txt *.java bin -f ${TAR_DIR}/${TAR_FILE}
+
+git:
+	git add ../
+	git commit -m "Automated commit with MakeFile"
+	git push
