@@ -48,3 +48,6 @@ git:
 	git add ../
 	git commit -m "Automated commit with MakeFile"
 	git push
+
+status:
+	git status;
