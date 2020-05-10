@@ -12,6 +12,7 @@ MANIFEST_FILE=Manifest.txt
 MANIFEST_CONTENT="Main-Class: ${MAIN}"
 INPUT_FILE=${TestFileDir}/example_input.txt
 OUTPUT_FILE=*_output.txt Manifest.txt
+m=Automated commit with MakeFile
 
 make: *.java
 	$(CC) *.java
@@ -46,7 +47,7 @@ tar:
 
 git:
 	git add ../
-	git commit -m "Automated commit with MakeFile"
+	git commit -m "$(m)"
 	git push
 
 status:

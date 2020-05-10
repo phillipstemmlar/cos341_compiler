@@ -6,35 +6,47 @@ public class Parser {
 
 	public Parser(String prefix){PREFIX = prefix;}
 
-	public SyntaxNode execute(List<Token> tokensQ){
+	public HashMap<Integer, SyntaxNode> execute(List<Token> tokensQ){
 		if(tokensQ != null){
 			syntaxTree = parse(tokensQ);
 			if(syntaxTree != null) {
 				syntaxTree.genIndex();
 				syntaxTree.prune();
-				return syntaxTree;
+				return syntaxTree.symbolTree();
 			}
 		}
 		return null;
 	}
 
-	public SyntaxNode executeToFile(List<Token> tokensQ,String  Parser_SyntaxTree_output_file,String  Parser_SymbolTable_output_file,String  Parser_SyntaxTree_vis_output_fle){
-		syntaxTree = execute(tokensQ);
-		if(syntaxTree != null){
-			exportSyntaxTreeAndSymbolTable(syntaxTree, Parser_SyntaxTree_output_file, Parser_SymbolTable_output_file);
+	public HashMap<Integer, SyntaxNode> executeToFile(List<Token> tokensQ,String  Parser_SyntaxTree_output_file,String  Parser_SymbolTable_output_file,String  Parser_SyntaxTree_vis_output_fle){
+		HashMap<Integer, SyntaxNode> table = execute(tokensQ);
+		if(table != null){
+			exportSyntaxTreeAndSymbolTable(table, Parser_SyntaxTree_output_file, Parser_SymbolTable_output_file);
 			exportSyntaxNodeToFile(syntaxTree, Parser_SyntaxTree_vis_output_fle);
-			return syntaxTree;
+			return table;
 		}
 		return null;
 	}
 
-	private void exportSyntaxTreeAndSymbolTable(SyntaxNode root, String treeFile, String symbolfile){
-		if(root != null){
-			String out = root.treeIndexString();
-			// System.out.println(out);
+	private void exportSyntaxTreeAndSymbolTable(HashMap<Integer, SyntaxNode> table, String treeFile, String symbolfile){
+		if(table != null){
+			String treeIndexString = "";
+			String treeSymbolString = "";
+			for(Integer key : table.keySet()){
+				SyntaxNode node = table.get(key);
 
-			Helper.writeToFile(treeFile, out);
-			Helper.writeToFile(symbolfile, root.symbolTableString());
+				treeSymbolString += node.index + ":" + node.name2() + "\n";
+				if(!node.isLeaf()){
+					CompositeSyntaxNode comp = (CompositeSyntaxNode)node;
+					String childIndexList = "";
+					for(SyntaxNode child : comp.children){
+						childIndexList += "," + child.index;
+					}
+					treeIndexString += comp.index + ":" + childIndexList.substring(1) + "\n";
+				}
+			}
+			Helper.writeToFile(treeFile, treeIndexString);
+			Helper.writeToFile(symbolfile, treeSymbolString);
 		}
 	}
 

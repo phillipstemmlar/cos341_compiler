@@ -20,31 +20,21 @@ public class CompositeSyntaxNode extends SyntaxNode{
 		children = new ArrayList<>();
 	}
 
-	public String treeIndexString(){
-		String tree = index + ":";
-		for(int i = 0; i < children.size(); ++i){
-			SyntaxNode child = children.get(i);
-			tree += child.index + ( (i < children.size()-1)? "," : "");
-		}
-		tree += "\n";
+	//=======================Symbol Tree Table==============================
 
-		for(int i = 0; i < children.size(); ++i){
-			SyntaxNode child = children.get(i);
-			if(!child.isLeaf()) tree += child.treeIndexString();
-		}
 
-		return tree;
-	}
-
-	protected SortedMap<Integer, String> symbolTable( SortedMap<Integer, String> table){
-		if(table != null && index >= 0){
-			table.put(index, name2());
+	public HashMap<Integer, SyntaxNode> symbolTree(HashMap<Integer, SyntaxNode> table){
+		if(table != null){
+			table.put(index, this);
 			for(int i = 0; i < children.size(); ++i){
-				children.get(i).symbolTable(table);
+				table = children.get(i).symbolTree(table);
 			}
 		}
 		return table;
 	}
+
+
+	//=======================Pruning==============================
 
 	public void prune(){
 		if(children.size() == 0){
@@ -91,6 +81,7 @@ public class CompositeSyntaxNode extends SyntaxNode{
 		}
 	}
 
+	//=======================Children functions==============================
 	public void addChild(SyntaxNode child){
 		child.parent = this;
 		children.add(0,child);
@@ -121,6 +112,9 @@ public class CompositeSyntaxNode extends SyntaxNode{
 		return array;
 	}
 
+
+	//=======================Print TREE Structure==============================
+
 	public String treeString(String prefix) {
 		String tree = "";
 		tree += name() + "\n";
@@ -139,6 +133,10 @@ public class CompositeSyntaxNode extends SyntaxNode{
 		return tree;
 	}
 
+
+
+	//=======================GENERATE INDEX==============================
+
 	public void genIndex(){
 		if(parent == null) indexCount = 0;
 
@@ -149,4 +147,5 @@ public class CompositeSyntaxNode extends SyntaxNode{
 		}
 	}
 
+	//=======================EOF==========================================
 }

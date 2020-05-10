@@ -13,6 +13,7 @@ public class Compiler {
 
 	private static final String LEXER_PREFIX = "Lexical Error";
 	private static final String PARSER_PREFIX = "Syntax Error";
+	private static final String SCOPER_PREFIX = "Scoping Error";
 
 	public static void main(String[] args) {
 		if(args.length >= 1){
@@ -30,18 +31,23 @@ public class Compiler {
 
 	public List<Token> tokensQ = null;
 	public SyntaxNode syntaxTree = null;
+	public HashMap<Integer, SyntaxNode> symbolTree = null;
+	HashMap<Integer, Scope> scopeTable = null;
 
 	private Compiler(){
 		lexer = new Lexer(LEXER_PREFIX);
 		parser = new Parser(PARSER_PREFIX);
+		scoper = new Scoper(SCOPER_PREFIX);
 	}
 
 	public void compile(){
 		tokensQ = lexer.executeToFile(inputfile,Lexer_output_file);
 		if(tokensQ != null){
-			syntaxTree = parser.executeToFile(tokensQ, Parser_SyntaxTree_output_file, Parser_SymbolTable_output_file, Parser_SyntaxTree_vis_output_fle);
-			if(syntaxTree != null){
-				scoper.excute(syntaxTree);
+			symbolTree = parser.executeToFile(tokensQ, Parser_SyntaxTree_output_file, Parser_SymbolTable_output_file, Parser_SyntaxTree_vis_output_fle);
+			if(symbolTree != null){
+				syntaxTree = parser.syntaxTree;
+				scopeTable = scoper.executeToFile(symbolTree, Scoper_SyntaxTree_output_file, Scoper_SymbolTable_output_file, Scoper_SyntaxTree_vis_output_fle);
+				if(scopeTable != null){}
 			}
 		}
 	}

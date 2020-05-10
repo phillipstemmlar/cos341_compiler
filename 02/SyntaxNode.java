@@ -19,30 +19,22 @@ public class SyntaxNode{
 		index = -1;
 	}
 
+	public HashMap<Integer, SyntaxNode> symbolTree(){
+		HashMap<Integer, SyntaxNode> table = symbolTree(new HashMap<>());
+		return table;
+	}
+
+	public HashMap<Integer, SyntaxNode> symbolTree(HashMap<Integer, SyntaxNode> table){
+		if(table != null){
+			table.put(index, this);
+		}
+		return table;
+	}
+
 	public void genIndex(){
 		if(parent == null) indexCount = 0;
 		index = indexCount;
 		indexCount++;
-	}
-
-	public String treeIndexString(){
-		return "";
-	}
-	public String symbolTableString(){
-		SortedMap<Integer, String> table = symbolTable(new TreeMap<>());
-		String output = "";
-		for(Integer key: table.keySet()){
-			String value = table.get(key);
-			if(value != null)output += key + ":" + value + "\n";
-		}
-		return output;
-	}
-
-	protected SortedMap<Integer, String> symbolTable( SortedMap<Integer, String> table){
-		if(table != null && index >= 0){
-			table.put(index, name2());
-		}
-		return table;
 	}
 
 	public void prune(){

@@ -1,0 +1,10 @@
+app = 0;
+num app;
+app = 100;
+beta;
+beta;
+
+proc beta {
+  app = 120;
+  bat = 220
+}

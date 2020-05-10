@@ -7,6 +7,24 @@ public class Helper{
 	public static Boolean erroring = true;
 	public static Boolean successing = false;
 
+	public static Variable.Type tokenToType(Token.eToken token){
+		switch(token){
+			case tok_string: return Variable.Type.string;
+			case tok_num: 	 return Variable.Type.num;
+			case tok_bool:	 return Variable.Type.bool;
+			default: return Variable.Type.undefined;
+		}
+	}
+
+	public static Token.eToken typeToToken(Variable.Type type){
+		switch(type){
+			case string: return Token.eToken.tok_string;
+			case num: 	 return Token.eToken.tok_num;
+			case bool:	 return Token.eToken.tok_bool;
+			default: return Token.eToken.tok_none;
+		}
+	}
+
 	public static String filetoString(String filename){
 		String file = "";
 		try {

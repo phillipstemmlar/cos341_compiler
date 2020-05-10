@@ -2,6 +2,7 @@ import java.util.*;
 public class LeafSyntaxNode extends SyntaxNode{
 
 	private String value = "";
+	private Integer scopeLevel = -1;
 	private static Token.eToken[] pruneTokens = {
 		Token.eToken.tok_space,
 		Token.eToken.tok_tab,
@@ -42,7 +43,7 @@ public class LeafSyntaxNode extends SyntaxNode{
 	}
 
 	public String name2(){
-		return nodeName();
+		return nodeName() + scopeStr();
 	}
 
 	private String nodeName(){
@@ -87,6 +88,21 @@ public class LeafSyntaxNode extends SyntaxNode{
 
 	public String treeString(String prefix) {
 		return name();
+	}
+
+	public Integer scope(){
+		return scopeLevel;
+	}
+
+	public void scope(Integer lvl){
+		scopeLevel = lvl;
+	}
+
+	private String scopeStr(){
+		if(scopeLevel != null && scopeLevel >= 0){
+			return ",\t" + "Scope-ID: " + scopeLevel;
+		}
+		return "";
 	}
 
 }
