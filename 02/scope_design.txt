@@ -1,0 +1,85 @@
+CASE A:		is Error
+CASE B:		is Error
+CASE C:		is Valid
+CASE D:		is Error
+CASE E:		is Valid
+CASE F:		is Error
+CASE G:		is Error
+
+==================== CASE A: Is Error ========================
+
+	1:	num a;
+	2:	string a;
+	3:	bool a;
+	4:
+	5:	output(a)
+
+Error occurs at line 2	-	variables of different or the same types cannot have the same name.
+
+==================== CASE B: Is Error ========================
+
+	1:	num a;
+	2:	num a;
+	3:
+	4:	output(a);
+
+Error occurs at line 2	-	variables of different or the same types cannot have the same name.
+
+==================== CASE C: Is Valid ========================
+
+	1:	num a;									//		Declares variable 'a'
+	2:	a;											//		Call procedure 'a'
+	3:	a = 5;									//		assigns number value of 5 to variable 'a'
+	4:	proc a {								//		Declares procedure 'a'
+	5:		a = 3;								//		assigns number value of 3 to variable 'a'
+	4:		a											//		calls procedure 'a' recursively
+	6:	}
+
+This code will be valid.
+Procedure names cannot appear on the left hand side of an assignment instruction, only variable names can.
+Thus there will be no confusion between whether a user defined identifier is a variable name or procedure name.
+
+==================== CASE D: Is Error ========================
+
+	1:	v = 1;
+	2:	num v
+
+Error occurs at line 2	-	variables have to be declard before that are used.
+
+Procedure do not have to be declared first and can be used before their decleration in the code.
+As long as the procedure is part of the current scope or a higher scope. 
+
+==================== CASE E: Is Valid ========================
+
+	1:	a;											//	calls procedure 'a'
+	2:	proc a {								//	Declares procedure 'a'
+	3:		b											//	calls procedure 'b' which is declared in the outer scope
+	4:	}
+	5:	proc b {								//	Declares procedure 'b'
+	6:		a											//	calls procedure 'a' which is declard in the outer scope
+	7:	}
+	
+this code will be valid.
+Procedure do not have to be declared first and can be used before their decleration in the code.
+As long as the procedure is part of the current scope or a higher scope. 
+
+==================== CASE F: Is Error ========================
+
+	1:	a;
+	2:	proc a {
+	3:	a;
+	4:		proc a {
+	5:			a
+	6:		}
+	7:	}
+	
+Error at line 4	-	procedures declared inside other procedures may not have the same name as any outer procedure
+Procedures cannot have the same name as any procedure in an outer scope that wraps around the scope that it is declared in.
+
+==================== CASE G: Is Error ========================
+
+	1:	a;
+	2:	proc a {...}
+	3:	proc a {...}
+
+Error occurs at line 3	-	Procedure of any scope may not have the same name.

@@ -11,6 +11,9 @@ public class SyntaxNode{
 	protected Integer index;
 	protected static Integer indexCount = 0;
 
+	protected Integer line = -1;
+	protected Integer col = -1;
+
 	public SyntaxNode(Token.eToken tok, Boolean leaf, String err){
 		token = tok;
 		isLeafNode = leaf;
@@ -66,6 +69,23 @@ public class SyntaxNode{
 
 	public String treeString(String prefix) {
 		return name();
+	}
+
+
+	public void  line(Integer ln){
+		line = ln;
+	}
+
+	public void col(Integer cl){
+		col = cl;
+	}
+
+	public Integer line(){
+		return line;
+	}
+
+	public Integer col(){
+		return col;
 	}
 
 	public String error(){

@@ -4,13 +4,14 @@ EXE=java
 PROJECT_NAME=COS341_u18171185_P02
 TAR_FILE=${PROJECT_NAME}.tar
 TAR_DIR=..
+TAR_INPUT=makefile ReadMe.txt scope_design.txt *.java
 MAIN=Compiler
 BIN=./bin
 TestFileDir=./TestFiles
 JAR_FILE=${PROJECT_NAME}.jar
 MANIFEST_FILE=Manifest.txt
 MANIFEST_CONTENT="Main-Class: ${MAIN}"
-INPUT_FILE=${TestFileDir}/example_input.txt
+INPUT_FILE=${TestFileDir}/example_input1.txt
 OUTPUT_FILE=*_output.txt Manifest.txt
 m=Automated commit with MakeFile
 
@@ -43,7 +44,7 @@ again: make
 	make run
 
 tar:
-	tar -cvz makefile ReadMe.txt *.java bin -f ${TAR_DIR}/${TAR_FILE}
+	tar -cvz ${TAR_INPUT} bin -f ${TAR_DIR}/${TAR_FILE}
 
 git:
 	git add ../

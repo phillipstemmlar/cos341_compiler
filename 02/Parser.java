@@ -81,6 +81,8 @@ public class Parser {
 				Helper.logln("=======|" + inputTokens[p].str() + "|=======");
 				if(stack.peek().isLeaf()){
 					((LeafSyntaxNode)stack.peek()).val(inputTokens[p].str());
+					((LeafSyntaxNode)stack.peek()).line(inputTokens[p].row);
+					((LeafSyntaxNode)stack.peek()).col(inputTokens[p].col);
 				}		
 				p++;
 				stack.pop();

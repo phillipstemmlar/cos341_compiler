@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Procedure{
 
 	public String ogname;
@@ -29,6 +31,21 @@ class Procedure{
 
 	public static Integer IDfromName(String name){
 		return Integer.parseInt(name.substring(1));
+	}
+
+	public Integer lvl(){
+		return scopeLevel;
+	}
+
+	public Integer index(){
+		return index;
+	}
+
+	public Integer declLine(HashMap<Integer, SyntaxNode> table){
+		if(table != null){
+			return table.get(index()).line();
+		}
+		return null;
 	}
 
 	public String toString(){

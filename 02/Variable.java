@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Variable{
 
 	public Type type;
@@ -29,6 +31,21 @@ class Variable{
 
 	public String toString(){
 		return name();
+	}
+
+	public Integer lvl(){
+		return scopeLevel;
+	}
+
+	public Integer index(){
+		return index;
+	}
+
+	public Integer declLine(HashMap<Integer, SyntaxNode> table){
+		if(table != null){
+			return table.get(index()).line();
+		}
+		return null;
 	}
 
 	public static Integer IDfromName(String name){

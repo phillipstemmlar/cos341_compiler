@@ -65,8 +65,20 @@ public class Scoper {
 			scopes.put(newScope.ID(), newScope);
 			parent = newScope;
 		}
-		else if(node.token == Token.eToken.DECL) parent.DECL_Lines.add(node.index);
-		else if(node.token == Token.eToken.PROC) parent.PROC_Lines.add(node.index);
+		else if(node.token == Token.eToken.DECL){
+			CompositeSyntaxNode DECL = (CompositeSyntaxNode)node;
+			LeafSyntaxNode NAME_val  = (LeafSyntaxNode)(((CompositeSyntaxNode)DECL.children.get(1)).children.get(0));
+			DECL.line(NAME_val.line());
+			DECL.col(NAME_val.col());
+			parent.DECL_Lines.add(node.index);
+		}
+		else if(node.token == Token.eToken.PROC){
+			CompositeSyntaxNode PROC = (CompositeSyntaxNode)node;
+			LeafSyntaxNode NAME_val  = (LeafSyntaxNode)PROC.children.get(1);
+			PROC.line(NAME_val.line());
+			PROC.col(NAME_val.col());
+			parent.PROC_Lines.add(node.index);
+		}
 		else if(node.token == Token.eToken.VAR) parent.VAR_Lines.add(node.index);
 		else if(node.token == Token.eToken.CALL) parent.CALL_Lines.add(node.index);
 
@@ -104,10 +116,20 @@ public class Scoper {
 
 				CompositeSyntaxNode PROC = (CompositeSyntaxNode)node;
 				LeafSyntaxNode NAME_val  = (LeafSyntaxNode)PROC.children.get(1);
-				Procedure proc = new Procedure(NAME_val.val(), i, scope.lvl());
-				scope.addProcedure(proc);
-				NAME_val.val(proc.name());
-				NAME_val.scope(proc.scopeLevel);
+				String name = NAME_val.val();
+
+				Procedure findProc = scope.findProcedure(name);
+
+				if(findProc == null ){
+					Procedure proc = new Procedure(name, i, scope.lvl());
+					scope.addProcedure(proc);
+					NAME_val.val(proc.name());
+					NAME_val.scope(proc.scopeLevel);
+				}else{
+					NAME_val.val(Procedure.noName());
+					Helper.error(PREFIX,PROC.line(),PROC.col(),errorRedeclaredProcedure(name,findProc.declLine(table)));
+				}
+
 			}
 		}
 	}
@@ -121,10 +143,19 @@ public class Scoper {
 				CompositeSyntaxNode TYPE = (CompositeSyntaxNode)DECL.children.get(0);
 				CompositeSyntaxNode NAME = (CompositeSyntaxNode)DECL.children.get(1);
 				LeafSyntaxNode NAME_val  = (LeafSyntaxNode)NAME.children.get(0);
-				Variable var = new Variable(Helper.tokenToType(TYPE.children.get(0).token),  NAME_val.val(), i, scope.lvl());
-				scope.addVariable(var);
-				NAME_val.val(var.name());
-				NAME_val.scope(var.scopeLevel);
+				String name = NAME_val.val();
+
+				Variable findVar = scope.findVariable(name);
+
+				if(findVar == null || findVar.lvl() != scope.lvl()){
+					Variable var = new Variable(Helper.tokenToType(TYPE.children.get(0).token),  name, i, scope.lvl());
+					scope.addVariable(var);
+					NAME_val.val(var.name());
+					NAME_val.scope(var.lvl());
+				}else{
+					NAME_val.val(Variable.noName());
+					Helper.error(PREFIX,DECL.line(),DECL.col(),errorRedeclaredInSameScope(name,findVar.declLine(table)));
+				}
 			}
 			
 		}
@@ -160,21 +191,31 @@ public class Scoper {
 				String name = VAR_name.val();
 				Variable var = scope.findVariable(name);
 
-				if(var != null){
-					if(var.index <= i){
-						VAR_name.val(var.name());
-						scope.addVariable(var);
-						VAR_name.scope(var.scopeLevel);
-					} 
-					else VAR_name.val(Variable.noName());
+				if(var != null && var.index <= i){
+					VAR_name.val(var.name());
+					scope.addVariable(var);
+					VAR_name.scope(var.scopeLevel);
 				}
-				else VAR_name.val(Variable.noName());
+				else {
+					VAR_name.val(Variable.noName());
+					Helper.error(PREFIX,VAR_name.line(),VAR_name.col(),errorUndefinedVariable(name));
+				}
 			}
 		}
 	}
+	private String errorRedeclaredInSameScope(String name, Integer declLine){
+		return "Variable \""+name+"\" has already been declared on line: "+declLine+" "
+		+"\n\tMultiple variables with the same name cannot be declared in the same scope.";
+	}
 
+	private String errorUndefinedVariable(String name){
+		return "Assigning a value to an undefined variable \""+name+"\"";
+	}
 
-
+	private String errorRedeclaredProcedure(String name, Integer declLine){
+		return "Procedure \""+name+"\" has already been declared in an outer scope on line: "+declLine+" "
+		+"\n\tProcedures cannot have the same name as any procedure in an outer scope that wraps around the scope that it is declared in";
+	}
 
 	public Scope getScope(Integer scopeID){
 		if(scopes != null) return scopes.get(scopeID);
