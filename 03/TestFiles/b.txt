@@ -1,0 +1,17 @@
+string w;
+string l;
+
+num guess;
+num rand;
+
+input(guess);
+rand = 9;
+
+w = "winner";
+l = "loser";
+
+if (eq(guess, rand)) then {
+  output(w)
+} else {
+  output(l)
+}

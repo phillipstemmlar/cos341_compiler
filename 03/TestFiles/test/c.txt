@@ -1,0 +1,12 @@
+
+foo;
+
+proc foo {
+  num a;
+  string a;
+
+  a = 0;
+  a = "a";
+
+  output(a)
+}

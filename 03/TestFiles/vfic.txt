@@ -1,0 +1,13 @@
+num a;
+input(a);
+num c;
+num i;
+c = 5;
+for (i = 0; i < a; i = add(i, 1)) {
+c = 11
+};
+output(c);
+g;
+proc g {
+output(a)
+}

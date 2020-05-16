@@ -1,0 +1,10 @@
+a: no errors or undefined var. check if different `a`s
+b: ? multiple variables with same name and type (redeclaration)
+c: ? multiple variables with same name, but different types
+d: ? same named variable and proc
+e: no errors or undefined var
+f: ? `if` declares different types on each branch, but with the same name
+g: ! use of undeclared variable `gd44w` on line 137
+h: ! use of undeclared variable `myvariablename` in scope on line 161
+i: no errors or undefined var
+j: ? `foo` proc in another `foo`

@@ -1,0 +1,33 @@
+num a; bool b;
+input(b);
+
+if (b) then {
+	num fgt;
+	fgt = -5;
+	a = fgt
+} else {
+	a = -10;
+	halt
+};
+
+num c;
+if (b) then {
+	c = -12
+} else {
+	c = add(a,a)
+};
+num d; num i;
+d = -100;
+for (i = 0; i < a; i = add(i, 1)) {
+	halt
+};
+
+while ((a < d)) { d = 0 };
+
+num bs;
+p;
+output(d);
+
+proc p {
+	bs = 10
+}

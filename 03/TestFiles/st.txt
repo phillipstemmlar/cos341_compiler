@@ -1,0 +1,38 @@
+num app;
+app = 100;
+beta;
+num car;
+string fg;
+car = 300;
+alpha;
+output(app);
+
+num pee;
+pee = car;
+app = 3;
+fg = "dfsd";
+app = car;
+car = pee;
+
+proc alpha {
+	app = 110;
+	num bat;
+	bat = 210;
+	epsilon;
+	
+	proc kappa {
+		num app;
+		bool cat;
+		cat = T;
+		app = 111
+	}
+	proc epsilon {
+		bat = 212;
+		car = 312
+	}
+}
+
+proc beta {
+	app = 120
+	
+}

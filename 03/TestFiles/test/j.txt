@@ -1,0 +1,15 @@
+num a;
+output(a);
+
+proc foo {
+  num a;
+  foo;
+  
+  proc bar {
+    num a
+  }
+  
+  proc foo {
+    num a
+  }
+}

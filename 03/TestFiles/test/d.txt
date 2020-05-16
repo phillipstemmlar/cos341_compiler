@@ -1,0 +1,20 @@
+a;
+b;
+
+proc a {
+  num a;
+  a;
+  a = 10;
+  
+  proc z {
+    bool z;
+    z;
+    z = T
+  }
+}
+
+proc b {
+  num b;
+  b;
+  b = 10
+}

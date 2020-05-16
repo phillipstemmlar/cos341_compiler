@@ -1,0 +1,252 @@
+num kmd;
+m;
+halt;
+kmd = add(kmd, 75516965);
+bool tc;
+halt;
+
+proc myproc {
+  num myvariablename
+}
+
+proc m {
+  while (T) {
+    bool j;
+    string rvqf;
+    if (not eq(j, rvqf)) then {
+      input(rvqf);
+      m
+    };
+    bool tk;
+    if ((j < tk)) then {
+      num fi1; for (kmd = 0; tc < fi1; fi1 = add(j, 1)) {
+        bool wpo;
+        bool i; for (tc = 0; i < wpo; rvqf = add(rvqf, 1)) {
+          input(fi1);
+          fm
+        };
+        bool piq
+      };
+      bool b;
+      if ((b > kmd)) then {
+        m;
+        if ((j < b)) then {
+          num o; num y; o = y;
+          num ueu; ueu = "p  7hzn"
+        }
+      } else {
+        halt;
+        bool t
+      };
+      nq;
+      string jq0
+    } else {
+      input(tc);
+      output(tk);
+      num d2;
+      if (or(not d2, F)) then {
+        num nkm8; output(nkm8);
+        sh49
+      }
+    };
+    while (tc) {
+      if (F) then {
+        num bg; output(bg);
+        m;
+        if (eq(tk, bg)) then {
+          ctfh;
+          num tt
+        } else {
+          string vls; kmd = vls;
+          halt
+        }
+      } else {
+        output(kmd);
+        bool fk; string tj; bool x7n; for (fk = 0; tj < kmd; x7n = add(tc, 1)) {
+          num lm; output(lm);
+          k
+        }
+      };
+      halt;
+      kmd = add(rvqf, tc);
+      string x
+    };
+    eo2;
+    halt
+  };
+  halt;
+  num u7; output(u7);
+  m;
+
+  proc fm {
+    input(u7);
+    string yhj; yhj = 6
+  }
+
+  proc nq {
+    tc = "a5cuf";
+    num pumoe;
+    if (and((u7 < pumoe), not T)) then {
+      halt;
+      if ((u7 < u7)) then {
+        bool dx;
+        string c; c = and(or(tc, T), and(or((u7 < u7), F), (dx > kmd)));
+        c = 3
+      } else {
+        halt;
+        halt
+      };
+      if ((kmd < u7)) then {
+        j;
+        bool u;
+        kmd = (pumoe > u)
+      } else {
+        halt;
+        halt
+      }
+    };
+
+    proc j {
+      bool ysxpt;
+      kmd = or((u7 < ysxpt), u7);
+      pumoe = 79
+    }
+
+
+  }
+
+  proc sh49 {
+    bool bai;
+    while (and(or(and(eq(tc, u7), (u7 < tc)), F), (bai > bai))) {
+      num g;
+      string edme0z;
+      if (T) then {
+        input(tc);
+        halt
+      } else {
+        kh;
+        halt
+      }
+    };
+    if (not and(eq(bai, kmd), not u7)) then {
+      string gg;
+      m;
+      gg = gg
+    } else {
+      for (u7 = 0; u7 < kmd; u7 = add(u7, 1)) {
+        halt;
+        tc = bai
+      };
+      string fj;
+      while (not or((fj < kmd), (fj > u7))) {
+        r9;
+        halt
+      };
+      while ((fj > fj)) {
+        zux;
+        num h3u
+      }
+    };
+    if (T) then {
+      num gr;
+      if ((gr > gr)) then {
+        halt;
+        bai = u7
+      };
+      input(u7)
+    };
+
+    proc kh {
+      halt;
+      bool o; input(myvariablename)
+    }
+
+    proc r9 {
+      input(u7);
+      num cl1w
+    }
+
+    proc zux {
+      pj;
+      bool u;
+
+      proc pj {
+        halt
+      }
+
+
+    }
+
+
+  }
+
+  proc ctfh {
+    halt;
+    while (T) {
+      e;
+      if (T) then {
+        m;
+        u7 = add(3488308, 443980)
+      } else {
+        bool u4ai; output(u4ai);
+        m
+      }
+    };
+    num u;
+    while ((u > kmd)) {
+      output(u);
+      m;
+      while ((u7 < u7)) {
+        kmd = tc;
+        bool uk
+      }
+    };
+    output(u);
+
+    proc e {
+      string h2;
+      eb6k;
+
+      proc eb6k {
+        halt
+      }
+
+
+    }
+
+
+  }
+
+  proc k {
+    string xav;
+    u7 = add(add(u7, 386), xav);
+    xav = (xav > u7);
+    while (and(or(F, not kmd), eq(kmd, xav))) {
+      tc = 719;
+      m;
+      for (tc = 0; kmd < u7; kmd = add(u7, 1)) {
+        gko;
+        bool s; s = 360199
+      }
+    };
+
+    proc gko {
+      halt;
+      halt
+    }
+
+
+  }
+
+  proc eo2 {
+    string o48; o48 = "b4r0wr";
+    while (eq(u7, kmd)) {
+      o48 = eq(kmd, u7);
+      halt;
+      o48 = 5041749
+    }
+  }
+
+
+}
+

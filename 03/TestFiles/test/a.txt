@@ -1,0 +1,17 @@
+num a;
+num b;
+
+foo;
+b = 20;
+
+proc foo {
+  num a;
+  a = 10;
+  output(a);
+  
+  proc bar {
+    num a;
+    a = 0;
+    output(a)
+  }
+}

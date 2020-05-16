@@ -1,0 +1,152 @@
+num w; for (w = 0; w < w; w = add(w, 1)) {
+  halt;
+  string v3h; v3h = w;
+  input(w);
+  w = (w < w);
+  while ((v3h < w)) {
+    bool l8d6;
+    if (l8d6) then {
+      num zg; zg = 293207;
+      v3h = ""
+    } else {
+      string qol; qol = v3h;
+      if (eq(v3h, qol)) then {
+        string mm9;
+        if (F) then {
+          u;
+          l8d6 = 2769
+        }
+      };
+      ymm4
+    };
+    halt
+  };
+  w = mult(v3h, 69)
+};
+for (w = 0; w < w; w = add(w, 1)) {
+  bool jp;
+  w = sub(add(75426, w), add(jp, w));
+  halt;
+  if (F) then {
+    if (T) then {
+      num fedz;
+      bool bx9;
+      jp = F
+    } else {
+      bool rofy;
+      if (T) then {
+        if (or(T, F)) then {
+          input(rofy);
+          bool xqu
+        };
+        halt;
+        num wvq
+      };
+      halt
+    };
+    if (T) then {
+      bool h; num gq6m; h = gq6m;
+      string mkp
+    } else {
+      num d7p;
+      halt
+    };
+    string frpu; frpu = "1k34"
+  };
+  w = 7
+};
+o;
+num c4;
+o;
+halt;
+halt;
+
+proc u {
+  if (c4) then {
+    bool oi;
+    string cjh;
+    num y;
+    string pz; pz = sub(cjh, add(y, mult(715, 39170)));
+    if (T) then {
+      num ro;
+      btd;
+      btd
+    }
+  } else {
+    output(w);
+    string tnf; tnf = "kyr";
+    bool sh
+  };
+  string rov;
+
+  proc btd {
+    num h;
+    bool zt
+  }
+
+
+}
+
+proc ymm4 {
+  num v8;
+  v8 = "r";
+  input(w)
+}
+
+proc o {
+  svqs;
+  string mdk; for (mdk = 0; c4 < c4; w = add(c4, 1)) {
+    heo;
+    string lkjf;
+    if (mdk) then {
+      string vx3;
+      if (eq(vx3, vx3)) then {
+        string bt5; bt5 = "fowa";
+        vx3 = lkjf
+      } else {
+        halt;
+        num sn; input(sn)
+      };
+      c
+    } else {
+      halt;
+      while (not F) {
+        heo;
+        heo
+      }
+    }
+  };
+
+  proc svqs {
+    string g1;
+    halt;
+    o
+  }
+
+  proc heo {
+    string fbkq7;
+    if (and(and(not T, not (fbkq7 > mdk)), or(and(or((w > fbkq7), F), c4), mdk))) then {
+      string s; output(s);
+      c4 = mdk
+    } else {
+      num u;
+      mdk = mdk
+    };
+    bool plt;
+    while ((w > mdk)) {
+      output(gd44w);
+      halt
+    }
+  }
+
+  proc c {
+    string bp; for (c4 = 0; bp < c4; c4 = add(w, 1)) {
+      output(w);
+      output(bp)
+    };
+    w = 3
+  }
+
+
+}
+

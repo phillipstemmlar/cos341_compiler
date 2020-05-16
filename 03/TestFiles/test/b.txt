@@ -1,0 +1,14 @@
+num a;
+a = 10;
+output(a);
+
+proc foo {
+  num b;
+  b = 0;
+  output(b);
+  
+  num b;
+  b = 10;
+  
+  output(b)
+}

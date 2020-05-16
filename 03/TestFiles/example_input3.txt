@@ -1,0 +1,11 @@
+num app;
+input(app);
+app = 100;
+beta;
+
+proc beta {
+  app = 120;
+  string bat;
+  bat = 220;
+  output(bat)
+}

@@ -1,0 +1,19 @@
+string k01;
+zjc;
+string mnv;
+zjc;
+
+proc zjc {
+  bool vdg;
+  num yuy;
+  halt;
+  
+  if (T) then {
+    num a
+  } else {
+    string a
+  };
+  
+  output(a)
+}
+
