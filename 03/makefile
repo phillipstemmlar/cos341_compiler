@@ -11,7 +11,7 @@ TestFileDir=./TestFiles
 JAR_FILE=${PROJECT_NAME}.jar
 MANIFEST_FILE=Manifest.txt
 MANIFEST_CONTENT="Main-Class: ${MAIN}"
-INPUT_FILE=${TestFileDir}/example_input3.txt
+INPUT_FILE=${TestFileDir}/example_input2.txt
 OUTPUT_FILE=*_output.txt Manifest.txt
 m=Automated commit with MakeFile
 

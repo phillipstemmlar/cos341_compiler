@@ -5,7 +5,7 @@ public class Helper{
 
 	public static Boolean logging = false;
 	public static Boolean erroring = true;
-	public static Boolean successing = false;
+	public static Boolean successing = true;
 
 	public static Variable.Type tokenToType(Token.eToken token){
 		switch(token){
@@ -45,6 +45,16 @@ public class Helper{
 		switch(token){
 			case tok_input: return "input";
 			case tok_output: 	 return "output";
+			case tok_add: 	 return "add";
+			case tok_sub: 	 return "sub";
+			case tok_mult: 	 return "mult";
+			case tok_or: 	 return "or";
+			case tok_and: 	return "and";
+			case tok_not: 	 return "not";
+			case tok_greater_than: 	 return ">";
+			case tok_less_than: 	 return "<";
+			case tok_if: 	 return "if";
+			case tok_while: 	 return "while";
 			default: return token + "";
 		}
 	}

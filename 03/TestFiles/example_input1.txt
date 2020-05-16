@@ -1,10 +1,4 @@
-a;
-proc a {
-	b;
-	proc b {
-		a
-	}
-}
-proc b{
-	num x
-}
+bool a;
+num b;
+a = ( b < b );
+a = eq(b,a)

@@ -1,9 +1,8 @@
-if ((r > s))
-then
-{  r = add(1,s) };
+num r;
+num s;
+bool b;
+string x;
 
-r = "1111";
-
-for(r = 0; r < s; r = add(r,1)){
+for(b = 0; b < x; x = add(b,1)){
 	s = r
 }

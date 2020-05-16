@@ -7,5 +7,5 @@ proc beta {
   app = 120;
   string bat;
   bat = 220;
-  output(bat)
+  output(bat);
 }
