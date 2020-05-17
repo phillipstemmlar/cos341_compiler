@@ -1,0 +1,12 @@
+num r;
+r = add(2,1);
+r = r;
+
+for(r = 0; r < r; r = add(r,1)){
+	r = r
+};
+print;
+
+proc print {
+	output(r)
+}

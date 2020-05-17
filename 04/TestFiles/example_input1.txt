@@ -1,0 +1,4 @@
+bool a;
+num b;
+a = ( b < b );
+a = eq(b,a)

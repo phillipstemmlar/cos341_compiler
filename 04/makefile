@@ -1,7 +1,7 @@
 CC=javac
 JAR=jar
 EXE=java
-PROJECT_NAME=COS341_u18171185_P04
+PROJECT_NAME=COS341_u18171185_P03
 TAR_FILE=${PROJECT_NAME}.tar
 TAR_DIR=..
 TAR_INPUT=makefile ReadMe.txt scope_design.txt *.java bin

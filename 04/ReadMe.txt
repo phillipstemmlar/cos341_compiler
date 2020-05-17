@@ -1,4 +1,4 @@
-COS341 Practical 04
+COS341 Practical 03
 Phillip Schulze
 u18171185
 
@@ -11,9 +11,9 @@ To compile the code into a JAR file, use
 
 The JAR file will be available in the bin/ directory.
 
-To run the JAR file, called COS341_u18171185_P04.jar, use
+To run the JAR file, called COS341_u18171185_P03.jar, use
 
-	java -jar COS341_u18171185_P04.jar <inputfile>
+	java -jar COS341_u18171185_P03.jar <inputfile>
 
 ==================================JAVA FILE=========================================
 
