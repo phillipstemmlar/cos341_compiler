@@ -60,7 +60,7 @@ public class SyntaxNode{
 	}
 
 	private Boolean validType(){
-		return (true || type != Variable.Type.none && type != Variable.Type.undefined && type != Variable.Type.notype);
+		return (type != Variable.Type.none && type != Variable.Type.undefined && type != Variable.Type.notype);
 	}
 
 	public String typeStr(){

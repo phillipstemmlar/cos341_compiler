@@ -1,10 +1,10 @@
 CC=javac
 JAR=jar
 EXE=java
-PROJECT_NAME=COS341_u18171185_P02
+PROJECT_NAME=COS341_u18171185_P03
 TAR_FILE=${PROJECT_NAME}.tar
 TAR_DIR=..
-TAR_INPUT=makefile ReadMe.txt scope_design.txt *.java
+TAR_INPUT=makefile ReadMe.txt scope_design.txt *.java bin
 MAIN=Compiler
 BIN=./bin
 TestFileDir=./TestFiles
@@ -44,7 +44,7 @@ again: make
 	make run
 
 tar:
-	tar -cvz ${TAR_INPUT} bin -f ${TAR_DIR}/${TAR_FILE}
+	tar -cvz ${TAR_INPUT} -f ${TAR_DIR}/${TAR_FILE}
 
 git:
 	git add ../

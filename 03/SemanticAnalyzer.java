@@ -238,7 +238,7 @@ public class SemanticAnalyzer {
 					treeIndexString += comp.index + ":" + childIndexList.substring(1) + "\n";
 				}
 			}
-			// System.out.println(treeString);
+			System.out.println(treeString);
 			Helper.writeToFile(treeTable_file, treeIndexString);
 			Helper.writeToFile(symbolTable_file, treeSymbolString);
 			Helper.writeToFile(vis_tree_file, treeString);

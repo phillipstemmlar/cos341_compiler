@@ -1,8 +1,12 @@
 num r;
-num s;
-bool b;
-string x;
+r = add(2,1);
+r = r;
 
-for(b = 0; b < x; x = add(b,1)){
-	s = r
+for(r = 0; r < r; r = add(r,1)){
+	r = r
+};
+print;
+
+proc print {
+	output(r)
 }

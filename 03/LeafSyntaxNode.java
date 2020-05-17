@@ -91,7 +91,7 @@ public class LeafSyntaxNode extends SyntaxNode{
 	}
 
 	public String treeString(String prefix) {
-		return name();
+		return name3();
 	}
 
 	public Integer scope(){

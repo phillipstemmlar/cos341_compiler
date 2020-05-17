@@ -1,4 +1,4 @@
-COS341 Practical 02
+COS341 Practical 03
 Phillip Schulze
 u18171185
 
@@ -11,9 +11,9 @@ To compile the code into a JAR file, use
 
 The JAR file will be available in the bin/ directory.
 
-To run the JAR file, called COS341_u18171185_P02.jar, use
+To run the JAR file, called COS341_u18171185_P03.jar, use
 
-	java -jar COS341_u18171185_P02.jar <inputfile>
+	java -jar COS341_u18171185_P03.jar <inputfile>
 
 ==================================JAVA FILE=========================================
 
@@ -33,3 +33,7 @@ openjdk 11.0.7 2020-04-14
 OpenJDK Runtime Environment (build 11.0.7+10-post-Ubuntu-2ubuntu218.04)
 OpenJDK 64-Bit Server VM (build 11.0.7+10-post-Ubuntu-2ubuntu218.04, mixed mode, sharing)
 
+Distributor ID:	Ubuntu
+Description:	Ubuntu 18.04.4 LTS
+Release:	18.04
+Codename:	bionic
