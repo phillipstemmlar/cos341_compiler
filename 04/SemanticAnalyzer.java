@@ -4,15 +4,19 @@ public class SemanticAnalyzer {
 	private static String scope_PREFIX;
 	private static String type_PREFIX;
 	private static String value_PREFIX;
+	private static String value_PREFIX_w;
 
 	HashMap<Integer, Scope> scopes = null;
+	HashMap<Integer, SyntaxNode> nodeTable = null;
 
 	Boolean ERRORS = false;
-
-	public SemanticAnalyzer(String s_prefix, String t_prefix, String v_prefix){
+	Boolean WARNINGS = false;
+	
+	public SemanticAnalyzer(String s_prefix, String t_prefix, String v_prefix, String v_prefix_w){
 		scope_PREFIX = s_prefix;
 		type_PREFIX = t_prefix;
 		value_PREFIX = v_prefix;
+		value_PREFIX_w = v_prefix_w;
 		scopes = new HashMap<>();
 	}
 
@@ -85,11 +89,22 @@ public class SemanticAnalyzer {
 		}
 		else if(node.token == Token.eToken.VAR) parent.VAR_Lines.add(node.index);
 		else if(node.token == Token.eToken.CALL) parent.CALL_Lines.add(node.index);
+		// else if(){
+		// 	if(!node.isLeaf()){
+		// 		for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
+		// 			if(child.token == Token.eToken.CODE) child.branchParentIndex = node.index;
+		// 		}
+		// 	}
+		// }
 
 		// System.out.println(tabs + node.name());
 
 		if(!node.isLeaf()){
 			for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
+				if((node.token == Token.eToken.COND_BRANCH || node.token == Token.eToken.COND_LOOP) && child.token == Token.eToken.CODE){
+					child.branchParentIndex = node.index;
+				}else child.branchParentIndex = node.branchParentIndex;
+
 				if(child.token == Token.eToken.PROG) extractScopes(child, scopeLevel + 1, parent);
 				else extractScopes(child, scopeLevel, parent);
 			}
@@ -510,8 +525,9 @@ public class SemanticAnalyzer {
 		if(table != null){
 			SyntaxNode.printHasValue = true;
 			ERRORS = false;
+			WARNINGS = false;
 			extractValue(table);
-			ERRORS = false;
+			// ERRORS = false;
 			return (ERRORS)? null : scopes;
 		}
 		return null;
@@ -547,14 +563,18 @@ public class SemanticAnalyzer {
 		}
 	}
 
-	public Boolean checkValue(SyntaxNode node, Scope scope){
+	public Variable.Confirmation checkValue(SyntaxNode node, Scope scope){
 		return checkValue(node, scope, false);
 	}
 
-	public Boolean checkValue(SyntaxNode node, Scope scope, Boolean first){
-		if(!first && node.token == Token.eToken.PROG){
-			scope = scope.getScopeByIndex(node.index);
-			if(scope == null) return false;
+	public Variable.Confirmation checkValue(SyntaxNode node, Scope scope, Boolean first){
+		return checkValue(node, scope, first, false);
+	}
+
+	public Variable.Confirmation checkValue(SyntaxNode node, Scope scope, Boolean first, Boolean condBlock){
+		if(node.token == Token.eToken.PROG){
+			scope = first? scope : scope.getScopeByIndex(node.index);
+			if(scope == null) return Variable.Confirmation.no;
 		}
 		else if(node.token == Token.eToken.CALL){
 			SyntaxNode PROC_name  = ((CompositeSyntaxNode)node).children.get(0);
@@ -564,17 +584,17 @@ public class SemanticAnalyzer {
 				SyntaxNode PROG = proc.innerNode();
 				PROG.hasValue = checkValue(PROG, scope);
 			}		
-			return false;
+			return Variable.Confirmation.no;
 		}
 		else if(node.token == Token.eToken.tok_string_literal || node.token == Token.eToken.tok_integer_literal
 					|| node.token == Token.eToken.tok_T || node.token == Token.eToken.tok_F){
-			return true;
+			return Variable.Confirmation.yes;
 		}
 		else if(node.token == Token.eToken.VAR){
 			CompositeSyntaxNode VAR = (CompositeSyntaxNode)node;
 			SyntaxNode VAR_val  = VAR.children.get(0);
 			Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
-			Boolean hasVal = (var == null)? false : var.hasVal();
+			Variable.Confirmation hasVal = (var == null)? Variable.Confirmation.no : var.hasVal();
 			VAR_val.hasValue = hasVal;
 			return hasVal;
 		}
@@ -585,34 +605,130 @@ public class SemanticAnalyzer {
 			if(io.token == Token.eToken.tok_input){
 				SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
 				Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
-				var.hasVal(true);
+				if(condBlock && var.hasVal() == Variable.Confirmation.no){
+					var.hasVal(Variable.Confirmation.maybe);
+				}
+				else if(condBlock && var.hasVal() == Variable.Confirmation.maybe){
+					// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+					// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+					Boolean value = false;
+					if(var.initValueIndex >= 0){
+						SyntaxNode PARENT = nodeTable.get(node.branchParentIndex);
+						SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+
+						SyntaxNode BOOL = ((CompositeSyntaxNode)PARENT).children.get(1);
+
+						if(BOOL.hasValue == Variable.Confirmation.yes && ((CompositeSyntaxNode)PARENT).children.size() > 4 
+							&& INIT.branchParentIndex == node.branchParentIndex){
+							SyntaxNode THEN_CODE = ((CompositeSyntaxNode)PARENT).children.get(3);
+							SyntaxNode ELSE_CODE = ((CompositeSyntaxNode)PARENT).children.get(5);
+							value = (INIT != null && INIT.index < ELSE_CODE.index && node.index > ELSE_CODE.index);
+						}	
+					}
+					if(value){		
+						var.hasVal(Variable.Confirmation.yes);
+					}
+				}
+				else{
+					var.hasVal(Variable.Confirmation.yes);
+				}
+				var.initValueIndex = node.index;
 				VAR.hasValue = checkValue(VAR, scope);
 			}else if(io.token == Token.eToken.tok_output){
 				VAR.hasValue = checkValue(VAR, scope);
-				if(!VAR.hasValue){
+				if(VAR.hasValue == Variable.Confirmation.no){
+					SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+					Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
 					SyntaxNode leaf = getFirstLeaf(VAR);
-					Helper.error(value_PREFIX,leaf.line(),leaf.col(), "output(var) -> var has no value");
+					Helper.error(value_PREFIX,leaf.line(),leaf.col(), errorNoValue(var.ogname));
 					ERRORS = true;
 				}
+				else if(VAR.hasValue == Variable.Confirmation.maybe){
+					SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+					Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+					Boolean value = false;
+					if(var.initValueIndex >= 0){
+						SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+						// Helper.success("par:   " + INIT.branchParentIndex);
+						// Helper.success("child: " + node.branchParentIndex);
+						value = (INIT != null && INIT.branchParentIndex == node.branchParentIndex);
+					}
+					if(!value){
+						SyntaxNode leaf = getFirstLeaf(VAR);
+						Helper.warn(value_PREFIX_w,leaf.line(),leaf.col(), warnNoValue(var.ogname));
+						WARNINGS = true;
+					}
+
+				}
 			}
-			return false;
+			return Variable.Confirmation.no;
 		}
 		else if(node.token == Token.eToken.ASSIGN){
 			CompositeSyntaxNode ASSIGN = (CompositeSyntaxNode)node;
 			SyntaxNode VAR  = ASSIGN.children.get(0);
 			SyntaxNode VALUE  = ASSIGN.children.get(1);
 			VALUE.hasValue = checkValue(VALUE, scope);
-			if(VALUE.hasValue){
+			if(VALUE.hasValue == Variable.Confirmation.yes){
 				SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
 				Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
-				var.hasVal(true);
+				if(condBlock && var.hasVal() == Variable.Confirmation.no){
+					var.hasVal(Variable.Confirmation.maybe);
+				}
+				else if(condBlock && var.hasVal() == Variable.Confirmation.maybe){
+					// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+					// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+					Boolean value = false;
+					if(var.initValueIndex >= 0){
+						SyntaxNode PARENT = nodeTable.get(node.branchParentIndex);
+						SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+
+						SyntaxNode BOOL = ((CompositeSyntaxNode)PARENT).children.get(1);
+
+						if(BOOL.hasValue == Variable.Confirmation.yes && ((CompositeSyntaxNode)PARENT).children.size() > 4 && INIT.branchParentIndex == node.branchParentIndex){
+							SyntaxNode THEN_CODE = ((CompositeSyntaxNode)PARENT).children.get(3);
+							SyntaxNode ELSE_CODE = ((CompositeSyntaxNode)PARENT).children.get(5);
+							value = (INIT != null && INIT.index < ELSE_CODE.index && node.index > ELSE_CODE.index);
+						}		
+					}
+					if(value){		
+						var.hasVal(Variable.Confirmation.yes);
+					}
+				}
+				else{
+					var.hasVal(Variable.Confirmation.yes);
+				}
+				var.initValueIndex = node.index;
 				VAR.hasValue = checkValue(VAR, scope);
-			}else{
+			}else if(VALUE.hasValue == Variable.Confirmation.no){
+				SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+				Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
 				SyntaxNode leaf = getFirstLeaf(VALUE);
-				Helper.error(value_PREFIX,leaf.line(),leaf.col(), "a = b -> b has no value");
+				Helper.error(value_PREFIX,leaf.line(),leaf.col(), errorNoValue_ASSIGN(var.ogname));
 				ERRORS = true;
 			}
-			return false;
+			else if(VALUE.hasValue == Variable.Confirmation.maybe){
+				// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VALUE).children.get(0);
+				// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+				Boolean value = false;
+				// if(var.initValueIndex >= 0){
+				// 	SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+				// 	if(INIT != null && INIT.branchParentIndex == node.branchParentIndex){
+				// 		value = true;
+				// 	}
+				// }
+				if(!value){
+					SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+					Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+					SyntaxNode leaf = getFirstLeaf(VALUE);
+					Helper.warn(value_PREFIX_w,leaf.line(),leaf.col(), warnNoValue_ASSIGN(var.ogname));
+					WARNINGS = true;
+				}
+
+				
+			}
+			return Variable.Confirmation.no;
 		}
 		else if(node.token == Token.eToken.NUMEXPR){
 			CompositeSyntaxNode NUMEXPR = (CompositeSyntaxNode)node;
@@ -627,20 +743,62 @@ public class SemanticAnalyzer {
 			SyntaxNode NUM_2  = CALC.children.get(2);
 			NUM_1.hasValue = checkValue(NUM_1, scope);
 			NUM_2.hasValue = checkValue(NUM_2, scope);
-			Boolean err = false;
-			if(!NUM_1.hasValue){
+			Variable.Confirmation isValue = Variable.Confirmation.yes;
+			if(NUM_1.hasValue == Variable.Confirmation.no){
 				SyntaxNode leaf = getFirstLeaf(NUM_1);
-				Helper.error(value_PREFIX, leaf.line(), leaf.col(), "operation(a,b) -> a has no value");
+				Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValueCALC(OP.token));
 				ERRORS = true;
-				err = true;
+				isValue = Variable.Confirmation.no;
 			}
-			if(!NUM_2.hasValue){
+			else if(NUM_1.hasValue == Variable.Confirmation.maybe){
+				// SyntaxNode VAR_val  = ((CompositeSyntaxNode)NUM_1).children.get(0);
+				// if(VAR_val.token == Token.eToken.VAR){
+				// 	SyntaxNode VAR_name  = ((CompositeSyntaxNode)VAR_val).children.get(0);
+				// }
+				// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_name).val());
+
+				Boolean value = false;
+				// if(var.initValueIndex >= 0){
+				// 	SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+				// 	if(INIT != null && INIT.branchParentIndex == node.branchParentIndex){
+				// 		value = true;
+				// 	}
+				// }
+				if(!value){
+					SyntaxNode leaf = getFirstLeaf(NUM_1);
+					Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValueCALC(OP.token));
+					WARNINGS = true;
+					if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+				}	
+			}
+
+			if(NUM_2.hasValue == Variable.Confirmation.no){
 				SyntaxNode leaf = getFirstLeaf(NUM_2);
-				Helper.error(value_PREFIX, leaf.line(), leaf.col(), "operation(a,b) -> b has no value");
+				Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValueCALC(OP.token));
 				ERRORS = true;
-				err = true;
+				isValue = Variable.Confirmation.no;
 			}
-			return !err;
+			else if(NUM_2.hasValue == Variable.Confirmation.maybe){
+				SyntaxNode VAR_val  = ((CompositeSyntaxNode)NUM_2).children.get(0);
+				Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+				Boolean value = false;
+				if(var.initValueIndex >= 0){
+					SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+					if(INIT != null && INIT.branchParentIndex == node.branchParentIndex){
+						value = true;
+					}
+				}
+				if(!value){
+					SyntaxNode leaf = getFirstLeaf(NUM_2);
+					Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValueCALC(OP.token));
+					WARNINGS = true;
+					if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+				}
+				
+			}
+
+			return isValue;
 		}
 		else if(node.token == Token.eToken.BOOL){
 			SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
@@ -651,81 +809,209 @@ public class SemanticAnalyzer {
 				SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
 				VAR_1.hasValue = checkValue(VAR_1,scope);
 				VAR_2.hasValue = checkValue(VAR_2,scope);
-				Boolean err = false;
-				if(!VAR_1.hasValue){
+				Variable.Confirmation isValue = Variable.Confirmation.yes;
+				if(VAR_1.hasValue == Variable.Confirmation.no){
 					SyntaxNode leaf = getFirstLeaf(VAR_1);
-					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "(a # b) -> a has no value");
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValue_greater_less_than_eq(SECOND.token));
 					ERRORS = true;
-					err = true;
+					isValue = Variable.Confirmation.no;
 				}
-				if(!VAR_2.hasValue){
+				else if(VAR_1.hasValue == Variable.Confirmation.maybe){
+					// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR_1).children.get(0);
+					// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+					Boolean value = false;
+					// if(var.initValueIndex >= 0){
+					// 	SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+					// 	value = (INIT != null && INIT.branchParentIndex == node.branchParentIndex);
+					// }
+					if(!value){
+						SyntaxNode leaf = getFirstLeaf(VAR_1);
+						Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValue_greater_less_than_eq(SECOND.token));
+						WARNINGS = true;
+						if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+					}
+					
+				}
+
+				if(VAR_2.hasValue == Variable.Confirmation.no){
 					SyntaxNode leaf = getFirstLeaf(VAR_2);
-					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "(a # b) -> b has no value");
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValue_greater_less_than_eq(SECOND.token));
 					ERRORS = true;
-					err = true;
+					isValue = Variable.Confirmation.no;
 				}
-				return !err;
+				else if(VAR_2.hasValue == Variable.Confirmation.maybe){
+					// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR_2).children.get(0);
+					// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+					Boolean value = false;
+					// if(var.initValueIndex >= 0){
+					// 	SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+					// 	value = (INIT != null && INIT.branchParentIndex == node.branchParentIndex);
+					// }
+					if(!value){
+						SyntaxNode leaf = getFirstLeaf(VAR_2);
+						Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValue_greater_less_than_eq(SECOND.token));
+						WARNINGS = true;
+						if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+					}	
+				}
+
+				return isValue;
 			}
 			else if(FIRST.token == Token.eToken.tok_eq){
 				SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(1);
 				SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
 				VAR_1.hasValue = checkValue(VAR_1,scope);
 				VAR_2.hasValue = checkValue(VAR_2,scope);
-				Boolean err = false;
-				if(!VAR_1.hasValue){
+				Variable.Confirmation isValue = Variable.Confirmation.yes;
+				if(VAR_1.hasValue == Variable.Confirmation.no){
 					SyntaxNode leaf = getFirstLeaf(VAR_1);
-					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "eq(a , b) -> a has no value");
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValue_greater_less_than_eq(FIRST.token));
 					ERRORS = true;
-					err = true;
+					isValue = Variable.Confirmation.no;
 				}
-				if(!VAR_2.hasValue){
+				else if(VAR_1.hasValue == Variable.Confirmation.maybe){
+					// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR_1).children.get(0);
+					// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+					Boolean value = false;
+					// if(var.initValueIndex >= 0){
+					// 	SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+					// 	value = (INIT != null && INIT.branchParentIndex == node.branchParentIndex);
+					// }
+					if(!value){
+						SyntaxNode leaf = getFirstLeaf(VAR_1);
+						Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(),  warnValue_greater_less_than_eq(FIRST.token));
+						WARNINGS = true;
+						if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+					}	
+
+					
+				}
+
+				if(VAR_2.hasValue == Variable.Confirmation.no){
+					
 					SyntaxNode leaf = getFirstLeaf(VAR_2);
-					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "eq(a , b) -> b has no value");
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValue_greater_less_than_eq(FIRST.token));
 					ERRORS = true;
-					err = true;
+					isValue = Variable.Confirmation.no;
 				}
-				return !err;
+				else if(VAR_2.hasValue == Variable.Confirmation.maybe){
+					// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR_2).children.get(0);
+					// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+					Boolean value = false;
+					// if(var.initValueIndex >= 0){
+					// 	SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+					// 	value = (INIT != null && INIT.branchParentIndex == node.branchParentIndex);
+					// }
+					if(!value){
+						SyntaxNode leaf = getFirstLeaf(VAR_2);
+						Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValue_greater_less_than_eq(FIRST.token));
+						WARNINGS = true;
+						if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+					}
+
+					
+				}
+
+				return isValue;
 			}else if(FIRST.token == Token.eToken.tok_or || FIRST.token == Token.eToken.tok_and){
 				SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(1);
 				SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
 				VAR_1.hasValue = checkValue(VAR_1,scope);
 				VAR_2.hasValue = checkValue(VAR_2,scope);
-				Boolean err = false;
-				if(!VAR_1.hasValue){
+				Variable.Confirmation isValue = Variable.Confirmation.yes;
+				if(VAR_1.hasValue == Variable.Confirmation.no){
 					SyntaxNode leaf = getFirstLeaf(VAR_1);
-					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "bool_op( a, b ) -> a has no value");
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValue_and_or_not(FIRST.token));
 					ERRORS = true;
-					err = true;
+					isValue = Variable.Confirmation.no;
 				}
-				if(!VAR_2.hasValue){
+				else if(VAR_1.hasValue == Variable.Confirmation.maybe){
+					// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR_1).children.get(0);
+					// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+					Boolean value = false;
+					// if(var.initValueIndex >= 0){
+					// 	SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+					// 	value = (INIT != null && INIT.branchParentIndex == node.branchParentIndex);
+					// }
+					if(!value){
+						SyntaxNode leaf = getFirstLeaf(VAR_1);
+						Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValue_and_or_not(FIRST.token));
+						WARNINGS = true;
+						if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+					}
+				}
+
+				if(VAR_2.hasValue == Variable.Confirmation.no){
 					SyntaxNode leaf = getFirstLeaf(VAR_2);
-					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "bool_op( a, b ) -> a has no value");
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValue_and_or_not(FIRST.token));
 					ERRORS = true;
-					err = true;
+					isValue = Variable.Confirmation.no;
+					
 				}
-				return !err;
+				else if(VAR_2.hasValue == Variable.Confirmation.maybe){
+					// SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR_2).children.get(0);
+					// Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+					Boolean value = false;
+					// if(var.initValueIndex >= 0){
+					// 	SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+					// 	value = (INIT != null && INIT.branchParentIndex == node.branchParentIndex);
+					// }
+					if(!value){
+						SyntaxNode leaf = getFirstLeaf(VAR_2);
+						Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValue_and_or_not(FIRST.token));
+						WARNINGS = true;
+						if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+					}
+					
+				}
+
+				return isValue;
 			}
 			else if(FIRST.token == Token.eToken.tok_not){
 				SyntaxNode VAR = ((CompositeSyntaxNode)node).children.get(1);
 				VAR.hasValue = checkValue(VAR,scope);
-				if(!VAR.hasValue){
+				if(VAR.hasValue == Variable.Confirmation.no){
 					SyntaxNode leaf = getFirstLeaf(VAR);
-					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "not a -> a has no value");
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValue_and_or_not(FIRST.token));
 					ERRORS = true;
+					return Variable.Confirmation.no;
+				}
+				else if(VAR.hasValue == Variable.Confirmation.maybe){
+					SyntaxNode leaf = getFirstLeaf(VAR);
+					Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValue_and_or_not(FIRST.token));
+					WARNINGS = true;
+					return Variable.Confirmation.maybe;
 				}
 				return VAR.hasValue;
 			}
-			return true;
+			return checkValue(FIRST, scope);
 		}
 		else if (node.token == Token.eToken.COND_BRANCH){
 			SyntaxNode BOOL = ((CompositeSyntaxNode)node).children.get(1);
 			BOOL.hasValue = checkValue(BOOL,scope);
-			if(!BOOL.hasValue){
+			if(BOOL.hasValue == Variable.Confirmation.no){
 				SyntaxNode leaf = getFirstLeaf(BOOL);
-				Helper.error(value_PREFIX, leaf.line(), leaf.col(), "if(a) then {...} -> a has no value");
+				Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValueIF());
 				ERRORS = true;
 			}
-			return false;
+			else if(BOOL.hasValue == Variable.Confirmation.maybe){
+				SyntaxNode leaf = getFirstLeaf(BOOL);
+				Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValueIF());
+				WARNINGS = true;
+			}
+			if(!node.isLeaf()){
+				for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
+					if(child.token == Token.eToken.CODE)
+						child.hasValue = checkValue(child, scope, false, true);
+				}
+			}
+			return Variable.Confirmation.no;
 		}
 		else if (node.token == Token.eToken.COND_LOOP){
 			SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
@@ -734,61 +1020,187 @@ public class SemanticAnalyzer {
 				SyntaxNode dVAR = ((CompositeSyntaxNode)node).children.get(1);
 				SyntaxNode dVALUE = ((CompositeSyntaxNode)node).children.get(2);
 				dVALUE.hasValue = checkValue(dVALUE, scope);
-				if(dVALUE.hasValue){
+				if(dVALUE.hasValue == Variable.Confirmation.yes){
 					SyntaxNode VAR_val  = ((CompositeSyntaxNode)dVAR).children.get(0);
 					Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
-					var.hasVal(true);
+					if(condBlock && var.hasVal() == Variable.Confirmation.no){
+						var.hasVal(Variable.Confirmation.maybe);
+					}
+					else if(condBlock && var.hasVal() == Variable.Confirmation.maybe){
+						Boolean value = false;
+						if(var.initValueIndex >= 0){
+							SyntaxNode PARENT = nodeTable.get(node.branchParentIndex);
+							SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+						
+							SyntaxNode BOOL = ((CompositeSyntaxNode)PARENT).children.get(1);
+
+							if(BOOL.hasValue == Variable.Confirmation.yes &&((CompositeSyntaxNode)PARENT).children.size() > 4 && INIT.branchParentIndex == node.branchParentIndex){
+								SyntaxNode THEN_CODE = ((CompositeSyntaxNode)PARENT).children.get(3);
+								SyntaxNode ELSE_CODE = ((CompositeSyntaxNode)PARENT).children.get(5);
+								value = (INIT != null && INIT.index < ELSE_CODE.index && node.index > ELSE_CODE.index);
+							}		
+						}
+						if(value){		
+							var.hasVal(Variable.Confirmation.yes);
+						}
+					}
+					else{
+						var.hasVal(Variable.Confirmation.yes);
+					}
+					var.initValueIndex = node.index;
 					dVAR.hasValue = checkValue(dVAR, scope);
-				}else{
+				}else if(dVALUE.hasValue == Variable.Confirmation.no){
 					SyntaxNode leaf = getFirstLeaf(dVALUE);
-					Helper.error(value_PREFIX,leaf.line(),leaf.col(), "for( a = b; ...) -> b has no value");
+					Helper.error(value_PREFIX,leaf.line(),leaf.col(), errorValueFOR(((LeafSyntaxNode)leaf).val()));
 					ERRORS = true;
 				}
 
 				int[] indices = {3,5,6,8};
-				Boolean err = false;
+				Variable.Confirmation isValue = Variable.Confirmation.yes;
 				for(int i = 0; i < indices.length; ++i){
 					SyntaxNode VAR = ((CompositeSyntaxNode)node).children.get(indices[i]);
 					VAR.hasValue = checkValue(VAR,scope);
-					if(!VAR.hasValue){
+					if(VAR.hasValue == Variable.Confirmation.no){
 						SyntaxNode VAR_name  = ((CompositeSyntaxNode)VAR).children.get(0);
 						Variable var = scope.getVariableByName(((LeafSyntaxNode)VAR_name).val());
 						SyntaxNode leaf = getFirstLeaf(VAR);
-						Helper.error(value_PREFIX, leaf.line(), leaf.col(), "VAR* in for loop has no value");
+						Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValueFOR(var.ogname));
 						ERRORS = true;
-						err = true;
+						isValue = Variable.Confirmation.no;
+					}
+					else if(VAR.hasValue == Variable.Confirmation.maybe){
+						SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+						Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+
+						Boolean value = false;
+						if(var.initValueIndex >= 0){
+							SyntaxNode INIT = nodeTable.get(var.initValueIndex);
+							if(INIT != null && INIT.branchParentIndex == node.branchParentIndex){
+								value = true;
+							}
+						}
+						if(!value){
+							// SyntaxNode VAR_name  = ((CompositeSyntaxNode)VAR).children.get(0);
+							// Variable var = scope.getVariableByName(((LeafSyntaxNode)VAR_name).val());
+							SyntaxNode leaf = getFirstLeaf(VAR);
+							Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValueFOR(var.ogname));
+							WARNINGS = true;
+							if(isValue != Variable.Confirmation.no) isValue = Variable.Confirmation.maybe;
+						}
+
 					}
 				}
-
-				return false;
+				if(!node.isLeaf()){
+					for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
+						if(child.token == Token.eToken.CODE)
+						child.hasValue = checkValue(child, scope, false, true);
+					}
+				}
+				return Variable.Confirmation.no;
 			}
 			else if(FIRST.token == Token.eToken.tok_while){
 				SyntaxNode BOOL = ((CompositeSyntaxNode)node).children.get(1);
 				BOOL.hasValue = checkValue(BOOL,scope);
-				if(!BOOL.hasValue){
+				if(BOOL.hasValue == Variable.Confirmation.no){
 					SyntaxNode leaf = getFirstLeaf(BOOL);
-					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "while(a){...} -> a has no value");
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), errorValueWHILE());
 					ERRORS = true;
 				}
-				return false;
+				else if(BOOL.hasValue == Variable.Confirmation.maybe){
+					SyntaxNode leaf = getFirstLeaf(BOOL);
+					Helper.warn(value_PREFIX_w, leaf.line(), leaf.col(), warnValueWHILE());
+					WARNINGS = true;
+				}
+				if(!node.isLeaf()){
+					for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
+						if(child.token == Token.eToken.CODE)
+						child.hasValue = checkValue(child, scope, false, true);
+					}
+				}
+				return Variable.Confirmation.no;
 			}
 		}
 
 		if(!node.isLeaf()){
 			for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
-				child.hasValue = checkValue(child, scope);
+				child.hasValue = checkValue(child, scope, false, condBlock);
 			}
 		}
 
-		return false;
+		return Variable.Confirmation.no;
 	}
 
 	//endregion
 	//=============================================Additional Methods=================================================
 
-	private SyntaxNode getFirstLeaf(SyntaxNode node){
-		while(!node.isLeaf()) node = ((CompositeSyntaxNode)node).children.get(0);
-		return node;
+	/*
+	private String warnNoValue(String varName){
+		return "Variable \""+varName+"\" might not have been initialized with a value before this usage";
+	}
+	*/
+
+	private String errorValueFOR(String varName){
+		return "Variable \""+varName+"\" in for-loop's header does not have a value";
+	}
+
+	private String warnValueFOR(String varName){
+		return "Variable \""+varName+"\" in for-loop's header might not have a value";
+	}
+
+	private String errorValueWHILE(){
+		return "While-loop's condition does not have a value";
+	}
+
+	private String warnValueWHILE(){
+		return "While-loop's condition might not have a value";
+	}
+
+	private String errorValueIF(){
+		return "If-Then statement's condition does not have a value";
+	}
+
+	private String warnValueIF(){
+		return "IF-THEN statement's condition might not have a value";
+	}
+
+	private String errorValue_and_or_not(Token.eToken token){
+		return "Argument of boolean operation \"" + Helper.tokenStr(token) + "\" does not have a value";
+	}
+
+	private String warnValue_and_or_not(Token.eToken token){
+		return "Argument of boolean operation \"" + Helper.tokenStr(token) + "\" might not have a value";
+	}
+
+	private String errorValue_greater_less_than_eq(Token.eToken token){
+		return "Argument of comparison operation \"" + Helper.tokenStr(token) + "\" does not have a value";
+	}
+
+	private String warnValue_greater_less_than_eq(Token.eToken token){
+		return "Argument of comparison operation \"" + Helper.tokenStr(token) + "\" might not have a value";
+	}
+
+	private String errorValueCALC(Token.eToken token){
+		return "Argument of calculation operation \"" + Helper.tokenStr(token) + "\" does not have a value";
+	}
+
+	private String warnValueCALC(Token.eToken token){
+		return "Argument of calculation operation \"" + Helper.tokenStr(token) + "\" might not have a value";
+	}
+
+	private String errorNoValue_ASSIGN(String varName){
+		return "The expression being assigned to \""+varName+"\" does not have a value";
+	}
+
+	private String warnNoValue_ASSIGN(String varName){
+		return "The expression being assigned to \""+varName+"\" might not have a value";
+	}
+
+	private String errorNoValue(String varName){
+		return "Variable \""+varName+"\" does not have a value";
+	}
+
+	private String warnNoValue(String varName){
+		return "Variable \""+varName+"\" might not have a valu";
 	}
 
 	private String errorRedeclaredInSameScope(String name, Integer declLine){
@@ -863,6 +1275,11 @@ public class SemanticAnalyzer {
 	private String errorBool_if(Variable.Type type){
 		return "Invalid argument of type \""+type+"\" for conditional branch statement \"if\""
 		+ "\n\tExpected an expression of type bool.";
+	}
+
+	private SyntaxNode getFirstLeaf(SyntaxNode node){
+		while(!node.isLeaf()) node = ((CompositeSyntaxNode)node).children.get(0);
+		return node;
 	}
 
 	public Scope getScope(Integer scopeID){

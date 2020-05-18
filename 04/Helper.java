@@ -52,6 +52,7 @@ public class Helper{
 			case tok_or: 	 return "or";
 			case tok_and: 	return "and";
 			case tok_not: 	 return "not";
+			case tok_eq: 	 return "eq";
 			case tok_greater_than: 	 return ">";
 			case tok_less_than: 	 return "<";
 			case tok_if: 	 return "if";

@@ -10,7 +10,9 @@ class Variable{
 
 	public Integer index;
 	public Integer scopeLevel;
-	public Boolean hasValue;
+	public Variable.Confirmation hasValue;
+
+	public Integer initValueIndex = -1;
 
 	public Variable(Type type, String name, Integer ind, Integer scopelvl){
 		this.type = type;
@@ -18,7 +20,7 @@ class Variable{
 		this.ID = count++;
 		index = ind;
 		scopeLevel = scopelvl;
-		hasValue = false;
+		hasValue = Variable.Confirmation.no;
 		// System.out.println("---> New VAR: " + name() + "\t" + type + "\t" + ogname);
 	}
 
@@ -42,11 +44,11 @@ class Variable{
 		return index;
 	}
 
-	public Boolean hasVal(){
+	public Variable.Confirmation hasVal(){
 		return hasValue;
 	}
 
-	public void hasVal(Boolean b){
+	public void hasVal(Variable.Confirmation b){
 		hasValue = b;
 	}
 
@@ -70,4 +72,5 @@ class Variable{
 	}
 
 	public static enum Type{num,string,bool,procedure,undefined,none,notype}
+	public static enum Confirmation{yes,no,maybe}
 }

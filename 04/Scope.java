@@ -14,6 +14,8 @@ public class Scope{
 	public HashMap<Integer, Scope> sub_Scopes = null;
 	public HashMap<Integer, Scope> sub_Scopes_index = null;
 
+	public HashMap<Integer, Scope> semi_Scopes_index = null;
+
 	public Scope parent = null;
 	public Procedure declProc = null; 
 	public SyntaxNode scopeRoot = null;
@@ -23,7 +25,8 @@ public class Scope{
 	public List<Integer> PROC_Lines;
 	public List<Integer> CALL_Lines;
 
-	
+	public Boolean isSemi = false;
+	public Boolean is_THEN_BRANCH = true;
 
 	public Scope(int scopelvl, SyntaxNode root){
 		ID = count++;
@@ -35,6 +38,7 @@ public class Scope{
 
 		sub_Scopes = new HashMap<>();
 		sub_Scopes_index = new HashMap<>();
+		semi_Scopes_index = new HashMap<>();
 		scopeRoot = root;
 
 		DECL_Lines = new ArrayList<>();
@@ -178,6 +182,20 @@ public class Scope{
 	public Scope getScopeByIndex(int index){
 		if(sub_Scopes_index != null){
 			return sub_Scopes_index.get(index);
+		}
+		return  null;
+	}
+
+	public void addSemiScope(Scope scope){
+		if(semi_Scopes_index != null){
+			if(scope.index() >= 0) semi_Scopes_index.put(scope.index(), scope);
+		}
+	}
+
+
+	public Scope getSemiScopeByIndex(int index){
+		if(semi_Scopes_index != null){
+			return semi_Scopes_index.get(index);
 		}
 		return  null;
 	}

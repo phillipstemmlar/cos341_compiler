@@ -24,6 +24,7 @@ public class Compiler {
 	private static final String SCOPER_PREFIX = "Scoping Error";
 	private static final String TYPE_PREFIX = "Type Error";
 	private static final String VALUE_PREFIX = "Value Error";
+	private static final String VALUE_PREFIX_w = "Value Warning";
 
 	public static void main(String[] args) {
 		if(args.length >= 1){
@@ -47,7 +48,7 @@ public class Compiler {
 	private Compiler(){
 		lexer = new Lexer(LEXER_PREFIX);
 		parser = new Parser(PARSER_PREFIX);
-		semanticAnalyzer = new SemanticAnalyzer(SCOPER_PREFIX,TYPE_PREFIX,VALUE_PREFIX);
+		semanticAnalyzer = new SemanticAnalyzer(SCOPER_PREFIX,TYPE_PREFIX,VALUE_PREFIX,VALUE_PREFIX_w);
 	}
 
 	public void compile(){
@@ -60,6 +61,7 @@ public class Compiler {
 				if(scopeTable != null){
 					scopeTable = semanticAnalyzer.executeTypeToFile(symbolTree, Typer_SyntaxTree_output_file, Typer_SymbolTable_output_file, Typer_SyntaxTree_vis_output_fle);
 					if(scopeTable != null){
+						semanticAnalyzer.nodeTable = symbolTree;
 						scopeTable = semanticAnalyzer.executeValueToFile(symbolTree, Value_SyntaxTree_output_file, Value_SymbolTable_output_file, Value_SyntaxTree_vis_output_fle);
 					if(scopeTable != null){}
 					}

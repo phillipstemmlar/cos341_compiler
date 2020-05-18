@@ -1,8 +1,11 @@
-num a;
+bool a;
+input(a);
 num b;
-input(b);
-a = add(1,b);
-bool c;
-if ((a < b)) then {
-	output(a)
-}
+
+if(a) then{
+	b = 10
+}else{
+	b = 3
+};
+
+output(b)

@@ -16,8 +16,10 @@ public class SyntaxNode{
 	protected Integer col = -1;
 
 	public Variable.Type type = Variable.Type.none;
-	public Boolean hasValue = false;
+	public Variable.Confirmation hasValue = Variable.Confirmation.no;
 	public static Boolean printHasValue = false;
+
+	public Integer branchParentIndex = -1;
 
 	public SyntaxNode(Token.eToken tok, Boolean leaf, String err){
 		token = tok;
@@ -74,7 +76,7 @@ public class SyntaxNode{
 	}
 
 	public String hasValueStr(){
-		return (printHasValue? "\tHasValue: " + Helper.YesNo(hasValue) : "" );
+		return (printHasValue? "\tHasValue: " + hasValue : "" );
 	}
 
 	public String strHasValue(){
