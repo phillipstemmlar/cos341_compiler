@@ -59,6 +59,14 @@ public class Helper{
 		}
 	}
 
+	public String YesNo(Boolean bool){
+		return bool? "Yes" : "No";
+	}
+
+	public String yesno(Boolean bool){
+		return bool? "yes" : "no";
+	}
+
 	public static String filetoString(String filename){
 		String file = "";
 		try {

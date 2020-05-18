@@ -499,13 +499,299 @@ public class SemanticAnalyzer {
 		return Variable.notype();
 	}
 
+	//=============================================Value Checking=================================================
+
+	public HashMap<Integer, Scope> executeValue(HashMap<Integer, SyntaxNode> table){
+		if(table != null){
+			ERRORS = false;
+			extractValue(table);
+			return (ERRORS)? null : scopes;
+		}
+		return null;
+	}
+	public HashMap<Integer, Scope> executeValueToFile(HashMap<Integer, SyntaxNode> table, String treeTable_file, String symbolTable_file, String vis_tree_file){
+		scopes = executeType(table);
+		if(scopes != null){
+			String treeIndexString = "", treeSymbolString = "", treeString = table.get(0).treeString();
+			for(Integer key : table.keySet()){
+				SyntaxNode node = table.get(key);
+				treeSymbolString += node.index + ":" + node.name2() + "\n";
+				if(!node.isLeaf()){
+					CompositeSyntaxNode comp = (CompositeSyntaxNode)node;
+					String childIndexList = "";
+					for(SyntaxNode child : comp.children) childIndexList += "," + child.index;
+					treeIndexString += comp.index + ":" + childIndexList.substring(1) + "\n";
+				}
+			}
+			System.out.println(treeString);
+			Helper.writeToFile(treeTable_file, treeIndexString);
+			Helper.writeToFile(symbolTable_file, treeSymbolString);
+			Helper.writeToFile(vis_tree_file, treeString);
+		}
+		return scopes;
+	}
+
+	private void extractValue(HashMap<Integer, SyntaxNode> table){
+		if(scopes != null) extractValue(table.get(0), scopes.get(0), true);
+	}
+
+	private void extractValue(SyntaxNode node, Scope scope, Boolean first){
+		if(!first && node.token == Token.eToken.PROG){
+			scope = scope.getScopeByIndex(node.index);
+			if(scope == null) return;
+		}
+		
+		node.hasValue = checkValue(node,scope);
+
+		// String tabs = ""; for(int i = 0; i < scope.lvl(); ++i) tabs += "\t";
+		// System.out.println(tabs+node.name3());
+
+		if(!node.isLeaf()){
+			for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
+				extractTypes(child, scope, false);
+			}
+		}
+
+	}
+
+	public Boolean checkValue(SyntaxNode node, Scope scope){
+		return true;
+	// 	if(node.type != Variable.Type.none){
+	// 		return node.type;
+	// 	}
+	// 	else if(node.token == Token.eToken.tok_string_literal || node.token == Token.eToken.tok_integer_literal
+	// 			|| node.token == Token.eToken.tok_T || node.token == Token.eToken.tok_F
+	// 			|| node.token == Token.eToken.tok_string || node.token == Token.eToken.tok_num || node.token == Token.eToken.tok_bool){
+	// 		return Helper.tokenToType(node.token);
+	// 	}
+	// 	else if(node.token == Token.eToken.PROC){
+	// 		CompositeSyntaxNode PROC = (CompositeSyntaxNode)node;
+	// 		SyntaxNode proc  = PROC.children.get(0);
+	// 		SyntaxNode PROC_name  = PROC.children.get(1);
+	// 		SyntaxNode prog  = PROC.children.get(2);
+	// 		proc.type = checkType(proc, scope);
+	// 		PROC_name.type = Procedure.Type;
+	// 		prog.type = checkType(prog, scope);
+	// 		return Variable.notype();
+	// 	}
+	// 	else if(node.token == Token.eToken.DECL){
+	// 		CompositeSyntaxNode DECL = (CompositeSyntaxNode)node;
+	// 		SyntaxNode TYPE = DECL.children.get(0);
+	// 		SyntaxNode NAME = DECL.children.get(1);	
+	// 		TYPE.type = checkType(TYPE,scope);
+	// 		NAME.type = checkType(NAME,scope);
+	// 		return Variable.notype();
+	// 	}
+	// 	else if(node.token == Token.eToken.TYPE){
+	// 		CompositeSyntaxNode TYPE = (CompositeSyntaxNode)node;
+	// 		SyntaxNode TYPE_val  = TYPE.children.get(0);
+	// 		TYPE_val.type = checkType(TYPE_val,scope);
+	// 		return TYPE_val.type;
+	// 	}
+	// 	else if(node.token == Token.eToken.NAME){
+	// 		CompositeSyntaxNode NAME = (CompositeSyntaxNode)node;	
+	// 		SyntaxNode NAME_val  = NAME.children.get(0);		
+	// 		Variable var = scope.findVariableByName(((LeafSyntaxNode)NAME_val).val());
+	// 		Variable.Type type = (var == null)? Variable.undefined() : var.type;
+	// 		NAME_val.type = type;
+	// 		return type;
+	// 	}
+	// 	else if(node.token == Token.eToken.IO){
+	// 		CompositeSyntaxNode IO = (CompositeSyntaxNode)node;
+	// 		SyntaxNode io = IO.children.get(0);
+	// 		SyntaxNode VAR = IO.children.get(1);	
+	// 		io.type = checkType(io,scope);
+	// 		VAR.type = checkType(VAR,scope);
+	// 		if(VAR.type != Variable.Type.string && VAR.type != Variable.Type.num && VAR.type != Variable.Type.bool){
+	// 			SyntaxNode leaf = getFirstLeaf(VAR);
+	// 			Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorInvalidIOtype(io.token,VAR.type));
+	// 			ERRORS = true;
+	// 		}
+	// 		return Variable.notype();
+	// 	}
+	// 	else if(node.token == Token.eToken.VAR){
+	// 		CompositeSyntaxNode VAR = (CompositeSyntaxNode)node;
+	// 		SyntaxNode VAR_val  = VAR.children.get(0);
+	// 		Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+	// 		Variable.Type type = (var == null)? Variable.undefined() : var.type;
+	// 		VAR_val.type = type;
+	// 		return type;
+	// 	}
+	// 	else if(node.token == Token.eToken.CALL){
+	// 		CompositeSyntaxNode CALL = (CompositeSyntaxNode)node;
+	// 		SyntaxNode PROC_name  = CALL.children.get(0);
+	// 		Procedure proc = scope.findProcedureByName(((LeafSyntaxNode)PROC_name).val());
+	// 		PROC_name.type = (proc == null)? Variable.undefined() : Procedure.Type;
+	// 		return Variable.notype();
+	// 	}
+	// 	else if(node.token == Token.eToken.ASSIGN){
+	// 		CompositeSyntaxNode ASSIGN = (CompositeSyntaxNode)node;
+	// 		SyntaxNode VAR  = ASSIGN.children.get(0);
+	// 		SyntaxNode VALUE  = ASSIGN.children.get(1);
+	// 		VAR.type = checkType(VAR,scope);
+	// 		VALUE.type = checkType(VALUE,scope);
+	// 		if(VAR.type != VALUE.type){
+	// 			SyntaxNode VAR_name  = ((CompositeSyntaxNode)VAR).children.get(0);
+	// 			Variable var = scope.getVariableByName(((LeafSyntaxNode)VAR_name).val());
+	// 			SyntaxNode leaf = getFirstLeaf(VALUE);
+	// 			Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorAssigningInvalidTypes(var.ogname, VAR.type,VALUE.type));
+	// 			ERRORS = true;
+	// 		}
+	// 		return Variable.notype();
+	// 	}
+	// 	else if(node.token == Token.eToken.NUMEXPR){
+	// 		CompositeSyntaxNode NUMEXPR = (CompositeSyntaxNode)node;
+	// 		SyntaxNode NUM_val  = NUMEXPR.children.get(0);
+	// 		NUM_val.type = checkType(NUM_val, scope);
+	// 		if(NUM_val.type != Variable.Type.num){
+	// 			SyntaxNode leaf = getFirstLeaf(NUM_val);
+	// 			Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorNumExpr(NUM_val.type));
+	// 			ERRORS = true;
+	// 		}
+	// 		return NUM_val.type;
+	// 	}
+	// 	else if(node.token == Token.eToken.CALC){
+	// 		CompositeSyntaxNode CALC = (CompositeSyntaxNode)node;
+	// 		SyntaxNode OP  = CALC.children.get(0);
+	// 		SyntaxNode NUM_1  = CALC.children.get(1);
+	// 		SyntaxNode NUM_2  = CALC.children.get(2);
+	// 		OP.type = checkType(OP, scope);
+	// 		NUM_1.type = checkType(NUM_1, scope);
+	// 		NUM_2.type = checkType(NUM_2, scope);
+	// 		if(NUM_1.type != Variable.Type.num){
+	// 			SyntaxNode leaf = getFirstLeaf(NUM_1);
+	// 			Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_calc(OP.token,NUM_1.type));
+	// 			ERRORS = true;
+	// 		}
+	// 		if(NUM_2.type != Variable.Type.num){
+	// 			SyntaxNode leaf = getFirstLeaf(NUM_2);
+	// 			Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_calc(OP.token,NUM_2.type));
+	// 			ERRORS = true;
+	// 		}
+
+	// 		return Variable.Type.num;
+	// 	}
+	// 	else if(node.token == Token.eToken.BOOL){
+	// 		SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
+	// 		SyntaxNode SECOND = (((CompositeSyntaxNode)node).children.size() >= 2)?((CompositeSyntaxNode)node).children.get(1) : null;
+	// 		if(FIRST.token == Token.eToken.VAR){
+	// 			Variable.Type type = checkType(FIRST,scope);
+	// 			if(type != Variable.Type.bool){
+	// 				SyntaxNode VAR_name  = ((CompositeSyntaxNode)FIRST).children.get(0);
+	// 				Variable var = scope.getVariableByName(((LeafSyntaxNode)VAR_name).val());
+	// 				SyntaxNode leaf = getFirstLeaf(FIRST);
+
+	// 				Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_VAR(var.ogname, type));
+	// 				ERRORS = true;
+	// 			}	
+	// 		}
+	// 		else if(FIRST.token == Token.eToken.tok_eq){
+	// 			SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(1);
+	// 			SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
+	// 			VAR_1.type = checkType(VAR_1,scope);
+	// 			VAR_2.type = checkType(VAR_2,scope);
+	// 			if(VAR_1.type != VAR_2.type){
+	// 				SyntaxNode leaf = getFirstLeaf(VAR_2);
+	// 				Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_eq(VAR_1.type,VAR_2.type));
+	// 				ERRORS = true;
+	// 			}
+	// 			return Variable.Type.bool;
+	// 		}else if(FIRST.token == Token.eToken.tok_or || FIRST.token == Token.eToken.tok_and){
+	// 			SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(1);
+	// 			SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
+	// 			VAR_1.type = checkType(VAR_1,scope);
+	// 			VAR_2.type = checkType(VAR_2,scope);
+	// 			if(VAR_1.type != Variable.Type.bool){
+	// 				SyntaxNode leaf = getFirstLeaf(VAR_1);
+	// 				Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_or_and_not(FIRST.token, VAR_1.type));
+	// 				ERRORS = true;
+	// 			}
+	// 			if(VAR_2.type != Variable.Type.bool){
+	// 				SyntaxNode leaf = getFirstLeaf(VAR_2);
+	// 				Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_or_and_not(FIRST.token, VAR_2.type));
+	// 				ERRORS = true;
+	// 			}
+	// 			return Variable.Type.bool;
+	// 		}
+	// 		else if(FIRST.token == Token.eToken.tok_not){
+	// 			SyntaxNode VAR = ((CompositeSyntaxNode)node).children.get(1);
+	// 			VAR.type = checkType(VAR,scope);
+	// 			if(VAR.type != Variable.Type.bool){
+	// 				SyntaxNode leaf = getFirstLeaf(VAR);
+	// 				Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_or_and_not(FIRST.token, VAR.type));
+	// 				ERRORS = true;
+	// 			}
+	// 			return Variable.Type.bool;
+	// 		}
+	// 		else if(SECOND != null && (SECOND.token == Token.eToken.tok_greater_than || SECOND.token == Token.eToken.tok_less_than )){
+	// 			SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(0);
+	// 			SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
+	// 			VAR_1.type = checkType(VAR_1,scope);
+	// 			VAR_2.type = checkType(VAR_2,scope);
+	// 			if(VAR_1.type != Variable.Type.num){
+	// 				SyntaxNode leaf = getFirstLeaf(VAR_1);
+	// 				Helper.error(type_PREFIX, leaf.line(), leaf.col(), errBool_greater_less_than(SECOND.token, VAR_1.type));
+	// 				ERRORS = true;
+	// 			}
+	// 			if(VAR_2.type != Variable.Type.num){
+	// 				SyntaxNode leaf = getFirstLeaf(VAR_2);
+	// 				Helper.error(type_PREFIX, leaf.line(), leaf.col(), errBool_greater_less_than(SECOND.token, VAR_2.type));
+	// 				ERRORS = true;
+	// 			}
+	// 			return Variable.Type.bool;
+	// 		}
+	// 		return checkType(FIRST,scope);
+	// 	}
+	// 	else if (node.token == Token.eToken.COND_LOOP){
+	// 		SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
+
+	// 		if(FIRST.token == Token.eToken.tok_for){
+	// 			int[] indices = {1,3,5,6,8};
+	// 			for(int i = 0; i < indices.length; ++i){
+	// 				SyntaxNode VAR = ((CompositeSyntaxNode)node).children.get(indices[i]);
+	// 				VAR.type = checkType(VAR,scope);
+	// 				if(VAR.type != Variable.Type.num){
+	// 					SyntaxNode VAR_name  = ((CompositeSyntaxNode)VAR).children.get(0);
+	// 					Variable var = scope.getVariableByName(((LeafSyntaxNode)VAR_name).val());
+	// 					SyntaxNode leaf = getFirstLeaf(VAR);
+	// 					Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_for(var.ogname,VAR.type));
+	// 					ERRORS = true;
+	// 				}
+	// 			}
+	// 			return Variable.notype();
+	// 		}
+	// 		else if(FIRST.token == Token.eToken.tok_while){
+	// 			SyntaxNode VAR = ((CompositeSyntaxNode)node).children.get(1);
+	// 			VAR.type = checkType(VAR,scope);
+	// 			if(VAR.type != Variable.Type.bool){
+	// 				SyntaxNode leaf = getFirstLeaf(VAR);
+	// 				Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_while(VAR.type));
+	// 				ERRORS = true;
+	// 			}
+	// 			return Variable.notype();
+	// 		}
+	// 	}
+	// 	else if (node.token == Token.eToken.COND_BRANCH){
+	// 		SyntaxNode VAR = ((CompositeSyntaxNode)node).children.get(1);
+	// 		VAR.type = checkType(VAR,scope);
+	// 		if(VAR.type != Variable.Type.bool){
+	// 			SyntaxNode leaf = getFirstLeaf(VAR);
+	// 			Helper.error(type_PREFIX, leaf.line(), leaf.col(), errorBool_if(VAR.type));
+	// 			ERRORS = true;
+	// 		}
+	// 		return Variable.notype();
+	// 	}
+
+	// 	return Variable.notype();
+	}
+
+
+	//=============================================Additional Methods=================================================
 
 	private SyntaxNode getFirstLeaf(SyntaxNode node){
 		while(!node.isLeaf()) node = ((CompositeSyntaxNode)node).children.get(0);
 		return node;
 	}
-
-	//=============================================Additional Methods=================================================
 
 	private String errorRedeclaredInSameScope(String name, Integer declLine){
 		return "Variable \""+name+"\" has already been declared on line: "+declLine+" "

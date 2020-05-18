@@ -52,6 +52,11 @@ class Procedure{
 		return index;
 	}
 
+	public SyntaxNode innerNode(){
+		if(innerScope == null) return null;
+		return innerScope.scopeRoot;
+	}
+
 	public Integer declLine(HashMap<Integer, SyntaxNode> table){
 		if(table != null){
 			return table.get(index()).line();

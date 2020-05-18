@@ -16,6 +16,8 @@ public class SyntaxNode{
 	protected Integer col = -1;
 
 	public Variable.Type type = Variable.Type.none;
+	public Boolean hasValue = false;
+	public static Boolean printHasValue = false;
 
 	public SyntaxNode(Token.eToken tok, Boolean leaf, String err){
 		token = tok;
@@ -52,11 +54,11 @@ public class SyntaxNode{
 	}
 
 	public String name3(){
-		return token + "" + typeStr();
+		return token + "" + typeStr() + hasValueStr();
 	}
 
 	public String name2(){
-		return name() + strType();
+		return name() + strType() + strHasValue();
 	}
 
 	private Boolean validType(){
@@ -69,6 +71,14 @@ public class SyntaxNode{
 
 	public String strType(){
 		return (validType()?"\n\t└─" + typeStr() : "");
+	}
+
+	public String hasValueStr(){
+		return (printHasValue? "\tHasValue: " + Helper.YesNo(hasValue) : "" );
+	}
+
+	public String strHasValue(){
+		return (printHasValue?"\n\t└─" + hasValueStr() : "");
 	}
 
 	public Boolean isLeaf(){

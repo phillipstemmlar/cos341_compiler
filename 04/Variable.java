@@ -10,6 +10,7 @@ class Variable{
 
 	public Integer index;
 	public Integer scopeLevel;
+	public Boolean hasValue;
 
 	public Variable(Type type, String name, Integer ind, Integer scopelvl){
 		this.type = type;
@@ -17,7 +18,7 @@ class Variable{
 		this.ID = count++;
 		index = ind;
 		scopeLevel = scopelvl;
-
+		hasValue = false;
 		// System.out.println("---> New VAR: " + name() + "\t" + type + "\t" + ogname);
 	}
 
@@ -39,6 +40,14 @@ class Variable{
 
 	public Integer index(){
 		return index;
+	}
+
+	public Boolean hasVal(){
+		return hasValue;
+	}
+
+	public void hasVal(Boolean b){
+		hasValue = b;
 	}
 
 	public Integer declLine(HashMap<Integer, SyntaxNode> table){

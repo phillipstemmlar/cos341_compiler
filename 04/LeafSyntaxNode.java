@@ -43,11 +43,11 @@ public class LeafSyntaxNode extends SyntaxNode{
 	}
 
 	public String name3(){
-		return nodeName() + scopeStr() + typeStr();
+		return nodeName() + scopeStr() + typeStr() + hasValueStr();
 	}
 
 	public String name2(){
-		return nodeName() + strScope() + strType();
+		return nodeName() + strScope() + strType() + strHasValue();
 	}
 
 	private String nodeName(){

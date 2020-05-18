@@ -15,6 +15,10 @@ public class Compiler {
 	private static final String Typer_SyntaxTree_output_file = "Typer_SyntaxTree_output.txt";
 	private static final String Typer_SymbolTable_output_file = "Typer_SymbolTable_output.txt";
 
+	private static final String Value_SyntaxTree_vis_output_fle = "Value_SyntaxTree_Visualized_output.txt";
+	private static final String Value_SyntaxTree_output_file = "Value_SyntaxTree_output.txt";
+	private static final String Value_SymbolTable_output_file = "Value_SymbolTable_output.txt";
+
 	private static final String LEXER_PREFIX = "Lexical Error";
 	private static final String PARSER_PREFIX = "Syntax Error";
 	private static final String SCOPER_PREFIX = "Scoping Error";
@@ -55,7 +59,10 @@ public class Compiler {
 				scopeTable = semanticAnalyzer.executeScopeToFile(symbolTree, Scoper_SyntaxTree_output_file, Scoper_SymbolTable_output_file, Scoper_SyntaxTree_vis_output_fle);
 				if(scopeTable != null){
 					scopeTable = semanticAnalyzer.executeTypeToFile(symbolTree, Typer_SyntaxTree_output_file, Typer_SymbolTable_output_file, Typer_SyntaxTree_vis_output_fle);
+					if(scopeTable != null){
+						scopeTable = semanticAnalyzer.executeValueToFile(symbolTree, Value_SyntaxTree_output_file, Value_SymbolTable_output_file, Value_SyntaxTree_vis_output_fle);
 					if(scopeTable != null){}
+					}
 				}
 			}
 		}

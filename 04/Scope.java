@@ -67,7 +67,12 @@ public class Scope{
 	}
 
 	public Variable findVariableByName(String name){
-		Integer id = Variable.IDfromName(name);
+		Integer id;
+		try{
+			id = Variable.IDfromName(name);
+		}catch(Exception e){
+			return null;
+		}
 		Scope cur = this;
 		Variable var = null;
 		while(cur != null){
@@ -113,7 +118,12 @@ public class Scope{
 	}
 
 	public Procedure findProcedureByName(String name){
-		Integer id = Procedure.IDfromName(name);
+		Integer id;
+		try{
+			id = Procedure.IDfromName(name);
+		}catch(Exception e){
+			return null;
+		}
 		Scope cur = this;
 		Procedure proc = null;
 		while(cur != null){

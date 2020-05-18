@@ -1,4 +1,8 @@
-bool a;
+num a;
 num b;
-a = ( b < b );
-a = eq(b,a)
+input(b);
+a = add(1,b);
+bool c;
+if ((a < b)) then {
+	output(a)
+}

@@ -17,6 +17,7 @@ public class SemanticAnalyzer {
 	}
 
 	//=============================================Scope Checking=================================================
+	//region
 	
 	public HashMap<Integer, Scope> executeScope(HashMap<Integer, SyntaxNode> table){
 		if(table != null){
@@ -185,7 +186,10 @@ public class SemanticAnalyzer {
 					PROC_name.val(proc.name());
 					PROC_name.scope(proc.lvl());
 				 }
-				else PROC_name.val(Procedure.noName());
+				else {PROC_name.val(Procedure.noName());
+					Helper.error(scope_PREFIX,PROC_name.line(),PROC_name.col(),errorUndefinedProcedure(name));
+					ERRORS = true;
+				}
 			}
 		}
 	}
@@ -213,9 +217,9 @@ public class SemanticAnalyzer {
 			}
 		}
 	}
-
+	//endregion
 	//=============================================Type Checking=================================================
-
+	//region
 	public HashMap<Integer, Scope> executeType(HashMap<Integer, SyntaxNode> table){
 		if(table != null){
 			ERRORS = false;
@@ -238,7 +242,7 @@ public class SemanticAnalyzer {
 					treeIndexString += comp.index + ":" + childIndexList.substring(1) + "\n";
 				}
 			}
-			System.out.println(treeString);
+			// System.out.println(treeString);
 			Helper.writeToFile(treeTable_file, treeIndexString);
 			Helper.writeToFile(symbolTable_file, treeSymbolString);
 			Helper.writeToFile(vis_tree_file, treeString);
@@ -388,7 +392,25 @@ public class SemanticAnalyzer {
 		else if(node.token == Token.eToken.BOOL){
 			SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
 			SyntaxNode SECOND = (((CompositeSyntaxNode)node).children.size() >= 2)?((CompositeSyntaxNode)node).children.get(1) : null;
-			if(FIRST.token == Token.eToken.VAR){
+			
+			if(SECOND != null && (SECOND.token == Token.eToken.tok_greater_than || SECOND.token == Token.eToken.tok_less_than )){
+				SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(0);
+				SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
+				VAR_1.type = checkType(VAR_1,scope);
+				VAR_2.type = checkType(VAR_2,scope);
+				if(VAR_1.type != Variable.Type.num){
+					SyntaxNode leaf = getFirstLeaf(VAR_1);
+					Helper.error(type_PREFIX, leaf.line(), leaf.col(), errBool_greater_less_than(SECOND.token, VAR_1.type));
+					ERRORS = true;
+				}
+				if(VAR_2.type != Variable.Type.num){
+					SyntaxNode leaf = getFirstLeaf(VAR_2);
+					Helper.error(type_PREFIX, leaf.line(), leaf.col(), errBool_greater_less_than(SECOND.token, VAR_2.type));
+					ERRORS = true;
+				}
+				return Variable.Type.bool;
+			}
+			else if(FIRST.token == Token.eToken.VAR){
 				Variable.Type type = checkType(FIRST,scope);
 				if(type != Variable.Type.bool){
 					SyntaxNode VAR_name  = ((CompositeSyntaxNode)FIRST).children.get(0);
@@ -437,24 +459,7 @@ public class SemanticAnalyzer {
 				}
 				return Variable.Type.bool;
 			}
-			else if(SECOND != null && (SECOND.token == Token.eToken.tok_greater_than || SECOND.token == Token.eToken.tok_less_than )){
-				SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(0);
-				SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
-				VAR_1.type = checkType(VAR_1,scope);
-				VAR_2.type = checkType(VAR_2,scope);
-				if(VAR_1.type != Variable.Type.num){
-					SyntaxNode leaf = getFirstLeaf(VAR_1);
-					Helper.error(type_PREFIX, leaf.line(), leaf.col(), errBool_greater_less_than(SECOND.token, VAR_1.type));
-					ERRORS = true;
-				}
-				if(VAR_2.type != Variable.Type.num){
-					SyntaxNode leaf = getFirstLeaf(VAR_2);
-					Helper.error(type_PREFIX, leaf.line(), leaf.col(), errBool_greater_less_than(SECOND.token, VAR_2.type));
-					ERRORS = true;
-				}
-				return Variable.Type.bool;
-			}
-			return checkType(FIRST,scope);
+			return Variable.Type.bool;
 		}
 		else if (node.token == Token.eToken.COND_LOOP){
 			SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
@@ -498,22 +503,305 @@ public class SemanticAnalyzer {
 
 		return Variable.notype();
 	}
+	//endregion
+	//=============================================Value Checking=================================================
+	//region
+	public HashMap<Integer, Scope> executeValue(HashMap<Integer, SyntaxNode> table){
+		if(table != null){
+			SyntaxNode.printHasValue = true;
+			ERRORS = false;
+			extractValue(table);
+			ERRORS = false;
+			return (ERRORS)? null : scopes;
+		}
+		return null;
+	}
+	public HashMap<Integer, Scope> executeValueToFile(HashMap<Integer, SyntaxNode> table, String treeTable_file, String symbolTable_file, String vis_tree_file){
+		scopes = executeValue(table);
+		if(scopes != null){
+			String treeIndexString = "", treeSymbolString = "", treeString = table.get(0).treeString();
+			for(Integer key : table.keySet()){
+				SyntaxNode node = table.get(key);
+				treeSymbolString += node.index + ":" + node.name2() + "\n";
+				if(!node.isLeaf()){
+					CompositeSyntaxNode comp = (CompositeSyntaxNode)node;
+					String childIndexList = "";
+					for(SyntaxNode child : comp.children) childIndexList += "," + child.index;
+					treeIndexString += comp.index + ":" + childIndexList.substring(1) + "\n";
+				}
+			}
+			Helper.writeToFile(treeTable_file, treeIndexString);
+			Helper.writeToFile(symbolTable_file, treeSymbolString);
+			Helper.writeToFile(vis_tree_file, treeString);
+		}
+		return scopes;
+	}
 
+	private void extractValue(HashMap<Integer, SyntaxNode> table){
+		if(scopes != null) extractValue(table.get(0), scopes.get(0));
+	}
+
+	private void extractValue(SyntaxNode node, Scope scope){
+		if(node != null && scope != null){
+			node.hasValue = checkValue(node,scope, true);
+		}
+	}
+
+	public Boolean checkValue(SyntaxNode node, Scope scope){
+		return checkValue(node, scope, false);
+	}
+
+	public Boolean checkValue(SyntaxNode node, Scope scope, Boolean first){
+		if(!first && node.token == Token.eToken.PROG){
+			scope = scope.getScopeByIndex(node.index);
+			if(scope == null) return false;
+		}
+		else if(node.token == Token.eToken.CALL){
+			SyntaxNode PROC_name  = ((CompositeSyntaxNode)node).children.get(0);
+
+			Procedure proc = scope.findProcedureByName(((LeafSyntaxNode)PROC_name).val());
+			if(proc != null){
+				SyntaxNode PROG = proc.innerNode();
+				PROG.hasValue = checkValue(PROG, scope);
+			}		
+			return false;
+		}
+		else if(node.token == Token.eToken.tok_string_literal || node.token == Token.eToken.tok_integer_literal
+					|| node.token == Token.eToken.tok_T || node.token == Token.eToken.tok_F){
+			return true;
+		}
+		else if(node.token == Token.eToken.VAR){
+			CompositeSyntaxNode VAR = (CompositeSyntaxNode)node;
+			SyntaxNode VAR_val  = VAR.children.get(0);
+			Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+			Boolean hasVal = (var == null)? false : var.hasVal();
+			VAR_val.hasValue = hasVal;
+			return hasVal;
+		}
+		else if(node.token == Token.eToken.IO){
+			CompositeSyntaxNode IO = (CompositeSyntaxNode)node;
+			SyntaxNode io  = IO.children.get(0);
+			SyntaxNode VAR  = IO.children.get(1);
+			if(io.token == Token.eToken.tok_input){
+				SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+				Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+				var.hasVal(true);
+				VAR.hasValue = checkValue(VAR, scope);
+			}else if(io.token == Token.eToken.tok_output){
+				VAR.hasValue = checkValue(VAR, scope);
+				if(!VAR.hasValue){
+					SyntaxNode leaf = getFirstLeaf(VAR);
+					Helper.error(value_PREFIX,leaf.line(),leaf.col(), "output(var) -> var has no value");
+					ERRORS = true;
+				}
+			}
+			return false;
+		}
+		else if(node.token == Token.eToken.ASSIGN){
+			CompositeSyntaxNode ASSIGN = (CompositeSyntaxNode)node;
+			SyntaxNode VAR  = ASSIGN.children.get(0);
+			SyntaxNode VALUE  = ASSIGN.children.get(1);
+			VALUE.hasValue = checkValue(VALUE, scope);
+			if(VALUE.hasValue){
+				SyntaxNode VAR_val  = ((CompositeSyntaxNode)VAR).children.get(0);
+				Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+				var.hasVal(true);
+				VAR.hasValue = checkValue(VAR, scope);
+			}else{
+				SyntaxNode leaf = getFirstLeaf(VALUE);
+				Helper.error(value_PREFIX,leaf.line(),leaf.col(), "a = b -> b has no value");
+				ERRORS = true;
+			}
+			return false;
+		}
+		else if(node.token == Token.eToken.NUMEXPR){
+			CompositeSyntaxNode NUMEXPR = (CompositeSyntaxNode)node;
+			SyntaxNode NUM_val  = NUMEXPR.children.get(0);
+			NUM_val.hasValue = checkValue(NUM_val, scope);
+			return NUM_val.hasValue;
+		}
+		else if(node.token == Token.eToken.CALC){
+			CompositeSyntaxNode CALC = (CompositeSyntaxNode)node;
+			SyntaxNode OP  = CALC.children.get(0);
+			SyntaxNode NUM_1  = CALC.children.get(1);
+			SyntaxNode NUM_2  = CALC.children.get(2);
+			NUM_1.hasValue = checkValue(NUM_1, scope);
+			NUM_2.hasValue = checkValue(NUM_2, scope);
+			Boolean err = false;
+			if(!NUM_1.hasValue){
+				SyntaxNode leaf = getFirstLeaf(NUM_1);
+				Helper.error(value_PREFIX, leaf.line(), leaf.col(), "operation(a,b) -> a has no value");
+				ERRORS = true;
+				err = true;
+			}
+			if(!NUM_2.hasValue){
+				SyntaxNode leaf = getFirstLeaf(NUM_2);
+				Helper.error(value_PREFIX, leaf.line(), leaf.col(), "operation(a,b) -> b has no value");
+				ERRORS = true;
+				err = true;
+			}
+			return !err;
+		}
+		else if(node.token == Token.eToken.BOOL){
+			SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
+			SyntaxNode SECOND = (((CompositeSyntaxNode)node).children.size() >= 2)?((CompositeSyntaxNode)node).children.get(1) : null;
+			
+			if(SECOND != null && (SECOND.token == Token.eToken.tok_greater_than || SECOND.token == Token.eToken.tok_less_than )){
+				SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(0);
+				SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
+				VAR_1.hasValue = checkValue(VAR_1,scope);
+				VAR_2.hasValue = checkValue(VAR_2,scope);
+				Boolean err = false;
+				if(!VAR_1.hasValue){
+					SyntaxNode leaf = getFirstLeaf(VAR_1);
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "(a # b) -> a has no value");
+					ERRORS = true;
+					err = true;
+				}
+				if(!VAR_2.hasValue){
+					SyntaxNode leaf = getFirstLeaf(VAR_2);
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "(a # b) -> b has no value");
+					ERRORS = true;
+					err = true;
+				}
+				return !err;
+			}
+			else if(FIRST.token == Token.eToken.tok_eq){
+				SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(1);
+				SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
+				VAR_1.hasValue = checkValue(VAR_1,scope);
+				VAR_2.hasValue = checkValue(VAR_2,scope);
+				Boolean err = false;
+				if(!VAR_1.hasValue){
+					SyntaxNode leaf = getFirstLeaf(VAR_1);
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "eq(a , b) -> a has no value");
+					ERRORS = true;
+					err = true;
+				}
+				if(!VAR_2.hasValue){
+					SyntaxNode leaf = getFirstLeaf(VAR_2);
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "eq(a , b) -> b has no value");
+					ERRORS = true;
+					err = true;
+				}
+				return !err;
+			}else if(FIRST.token == Token.eToken.tok_or || FIRST.token == Token.eToken.tok_and){
+				SyntaxNode VAR_1 = ((CompositeSyntaxNode)node).children.get(1);
+				SyntaxNode VAR_2 = ((CompositeSyntaxNode)node).children.get(2);
+				VAR_1.hasValue = checkValue(VAR_1,scope);
+				VAR_2.hasValue = checkValue(VAR_2,scope);
+				Boolean err = false;
+				if(!VAR_1.hasValue){
+					SyntaxNode leaf = getFirstLeaf(VAR_1);
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "bool_op( a, b ) -> a has no value");
+					ERRORS = true;
+					err = true;
+				}
+				if(!VAR_2.hasValue){
+					SyntaxNode leaf = getFirstLeaf(VAR_2);
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "bool_op( a, b ) -> a has no value");
+					ERRORS = true;
+					err = true;
+				}
+				return !err;
+			}
+			else if(FIRST.token == Token.eToken.tok_not){
+				SyntaxNode VAR = ((CompositeSyntaxNode)node).children.get(1);
+				VAR.hasValue = checkValue(VAR,scope);
+				if(!VAR.hasValue){
+					SyntaxNode leaf = getFirstLeaf(VAR);
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "not a -> a has no value");
+					ERRORS = true;
+				}
+				return VAR.hasValue;
+			}
+			return true;
+		}
+		else if (node.token == Token.eToken.COND_BRANCH){
+			SyntaxNode BOOL = ((CompositeSyntaxNode)node).children.get(1);
+			BOOL.hasValue = checkValue(BOOL,scope);
+			if(!BOOL.hasValue){
+				SyntaxNode leaf = getFirstLeaf(BOOL);
+				Helper.error(value_PREFIX, leaf.line(), leaf.col(), "if(a) then {...} -> a has no value");
+				ERRORS = true;
+			}
+			return false;
+		}
+		else if (node.token == Token.eToken.COND_LOOP){
+			SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
+
+			if(FIRST.token == Token.eToken.tok_for){
+				SyntaxNode dVAR = ((CompositeSyntaxNode)node).children.get(1);
+				SyntaxNode dVALUE = ((CompositeSyntaxNode)node).children.get(2);
+				dVALUE.hasValue = checkValue(dVALUE, scope);
+				if(dVALUE.hasValue){
+					SyntaxNode VAR_val  = ((CompositeSyntaxNode)dVAR).children.get(0);
+					Variable var = scope.findVariableByName(((LeafSyntaxNode)VAR_val).val());
+					var.hasVal(true);
+					dVAR.hasValue = checkValue(dVAR, scope);
+				}else{
+					SyntaxNode leaf = getFirstLeaf(dVALUE);
+					Helper.error(value_PREFIX,leaf.line(),leaf.col(), "for( a = b; ...) -> b has no value");
+					ERRORS = true;
+				}
+
+				int[] indices = {3,5,6,8};
+				Boolean err = false;
+				for(int i = 0; i < indices.length; ++i){
+					SyntaxNode VAR = ((CompositeSyntaxNode)node).children.get(indices[i]);
+					VAR.hasValue = checkValue(VAR,scope);
+					if(!VAR.hasValue){
+						SyntaxNode VAR_name  = ((CompositeSyntaxNode)VAR).children.get(0);
+						Variable var = scope.getVariableByName(((LeafSyntaxNode)VAR_name).val());
+						SyntaxNode leaf = getFirstLeaf(VAR);
+						Helper.error(value_PREFIX, leaf.line(), leaf.col(), "VAR* in for loop has no value");
+						ERRORS = true;
+						err = true;
+					}
+				}
+
+				return false;
+			}
+			else if(FIRST.token == Token.eToken.tok_while){
+				SyntaxNode BOOL = ((CompositeSyntaxNode)node).children.get(1);
+				BOOL.hasValue = checkValue(BOOL,scope);
+				if(!BOOL.hasValue){
+					SyntaxNode leaf = getFirstLeaf(BOOL);
+					Helper.error(value_PREFIX, leaf.line(), leaf.col(), "while(a){...} -> a has no value");
+					ERRORS = true;
+				}
+				return false;
+			}
+		}
+
+		if(!node.isLeaf()){
+			for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
+				child.hasValue = checkValue(child, scope);
+			}
+		}
+
+		return false;
+	}
+
+	//endregion
+	//=============================================Additional Methods=================================================
 
 	private SyntaxNode getFirstLeaf(SyntaxNode node){
 		while(!node.isLeaf()) node = ((CompositeSyntaxNode)node).children.get(0);
 		return node;
 	}
 
-	//=============================================Additional Methods=================================================
-
 	private String errorRedeclaredInSameScope(String name, Integer declLine){
 		return "Variable \""+name+"\" has already been declared on line: "+declLine+" "
 		+"\n\tMultiple variables with the same name cannot be declared in the same scope.";
 	}
-
+	
 	private String errorUndefinedVariable(String name){
 		return "Assigning a value to an undefined variable \""+name+"\"";
+	}
+
+	private String errorUndefinedProcedure(String name){
+		return "Cannot call undefined procedure \""+name+"\"";
 	}
 
 	private String errorRedeclaredProcedure(String name, Integer declLine){

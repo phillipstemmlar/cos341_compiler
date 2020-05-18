@@ -6,6 +6,7 @@ public class Helper{
 	public static Boolean logging = false;
 	public static Boolean erroring = true;
 	public static Boolean successing = true;
+	public static Boolean warning = true;
 
 	public static Variable.Type tokenToType(Token.eToken token){
 		switch(token){
@@ -57,6 +58,14 @@ public class Helper{
 			case tok_while: 	 return "while";
 			default: return token + "";
 		}
+	}
+
+	public static  String YesNo(Boolean bool){
+		return bool? "Yes" : "No";
+	}
+
+	public static String yesno(Boolean bool){
+		return bool? "yes" : "no";
 	}
 
 	public static String filetoString(String filename){
@@ -113,7 +122,7 @@ public class Helper{
 		return col + 1;
 	}
 
-	private static String boldQuotes(String msg){
+	private static String boldQuotes(String msg, String col){
 		Boolean first = true;
 		String newMsg = "";
 		char[] msgc = msg.toCharArray();
@@ -121,7 +130,7 @@ public class Helper{
 			char c = msgc[i];
 			String cstr = c + "";
 			if(c == '\"'){
-				cstr = (first? c + bold: red + c);
+				cstr = (first? c + bold: col + c);
 				first = !first;
 			}
 			newMsg += cstr;
@@ -141,11 +150,19 @@ public class Helper{
 	}
 
 	public static void error(String prefix, int line, int col, String msg){
-		if(erroring)System.out.println(red + prefix + " [line:" + line + ", col:" + col + "]:\n\t" + boldQuotes(msg) + white);
+		if(erroring)System.out.println(red + prefix + " [line:" + line + ", col:" + col + "]:\n\t" + boldQuotes(msg,red) + white);
 	}
 
 	public static void error(String msg){
-		if(erroring)System.out.println(red + boldQuotes(msg) + white);
+		if(erroring)System.out.println(red + boldQuotes(msg,red) + white);
+	}
+
+	public static void warn(String prefix, int line, int col, String msg){
+		if(warning)System.out.println(yellow + prefix + " [line:" + line + ", col:" + col + "]:\n\t" + boldQuotes(msg,yellow) + white);
+	}
+
+	public static void warn(String msg){
+		if(warning)System.out.println(yellow + boldQuotes(msg,yellow) + white);
 	}
 
 	public static void success(String str){
@@ -174,6 +191,7 @@ public class Helper{
 
 	public static final String bold = "\033[0;1m";
 	public static final String red = "\033[0;31m";
+	public static final String yellow = "\033[0;33m";
 	public static final String green = "\033[0;32m";
 	public static final String blue = "\033[0;34m";
 	public static final String white = "\033[0;37m";
