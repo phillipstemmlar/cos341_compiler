@@ -1,0 +1,8 @@
+
+num a;
+num b;
+
+a = add(2, sub(4, 1));
+b = mult(a, 5);
+
+output(b)

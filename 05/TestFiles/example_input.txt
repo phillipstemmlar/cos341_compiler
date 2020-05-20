@@ -1,0 +1,8 @@
+num int;
+populate;
+int = add(int , mult(10,2));
+output(int);
+
+proc populate{
+  int = 100
+}

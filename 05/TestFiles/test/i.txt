@@ -1,0 +1,149 @@
+tu;
+string gc3g;
+input(gc3g);
+
+proc tu {
+  num r;
+  num rhi;
+  num c;
+  num j;
+  for (r = 0; r < rhi; c = add(j, 1)) {
+    gd;
+    bool i65i;
+    bool qel;
+    i65i = qel;
+    bool vq;
+    vq = qel
+  };
+  output(gc3g);
+  num b5;
+  num zsa7r;
+  zsa7r = add(2211337, b5);
+  halt;
+  string oo;
+  output(oo);
+  num k;
+
+  proc gd {
+    num lz;
+    num naczo;
+    num zy;
+    while (or(and(eq(lz, naczo), (naczo < lz)), eq(naczo, zy))) {
+      hxn;
+      d;
+      num om0
+    };
+    num yfs5;
+    for (zy = 0; lz < yfs5; b5 = add(yfs5, 1)) {
+      string xc;
+      input(xc);
+      halt;
+      num bnr;
+      while ((bnr < naczo)) {
+        halt;
+        bool s;
+        s = T;
+        num lfo;
+        output(lfo)
+      };
+      bool clm;
+      num mdl;
+      string fmi;
+      if (not or(or(or((rhi < r), (zsa7r < bnr)), T), or(F, or(or(clm, or(or((mdl < lz), F), and(eq(xc, fmi), not T))), or((bnr > yfs5), and(not F, (bnr > bnr))))))) then {
+        num abbx;
+        num n;
+        for (naczo = 0; abbx < lz; n = add(n, 1)) {
+          tu;
+          input(clm)
+        };
+        num m9;
+        if ((m9 > bnr)) then {
+          halt;
+          halt
+        };
+        num eml;
+        if (eq(m9, eml)) then {
+          string eg6;
+          halt
+        } else {
+          string ov;
+          halt
+        }
+      } else {
+        bool kr;
+        num fv;
+        num rj;
+        for (fv = 0; fv < mdl; rj = add(b5, 1)) {
+          bool b;
+          b = kr;
+          num o
+        };
+        num uav;
+        num hch;
+        num eaz;
+        for (uav = 0; hch < mdl; eaz = add(bnr, 1)) {
+          halt;
+          output(oo)
+        }
+      }
+    };
+    num y86g;
+    num mu6;
+    for (y86g = 0; naczo < mu6; zsa7r = add(k, 1)) {
+      halt;
+      num e;
+      while (or(eq(zsa7r, e), (e < e))) {
+        if (not F) then {
+          gc3g = "4p";
+          bool i
+        } else {
+          tu;
+          halt
+        };
+        string s7
+      };
+      num rxf;
+      halt
+    };
+
+    proc hxn {
+      halt;
+      bool ur;
+      while (ur) {
+        num byn8;
+        num ov9q;
+        num t;
+        bool px;
+        px = not or(eq(byn8, ov9q), (j > t));
+        hr
+      };
+      gc3g = "kapr";
+
+      proc hr {
+        halt
+      }
+
+    }
+    proc d {
+      bool qztk;
+      if (not not qztk) then {
+        zsa7r = 2;
+        naczo = 22
+      } else {
+        halt;
+        d
+      };
+      rxj;
+
+      proc daaaaaa {
+        halt
+      }
+      proc rxj {
+        halt
+      }
+
+    }
+
+  }
+
+}

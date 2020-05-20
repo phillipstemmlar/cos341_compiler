@@ -1,0 +1,291 @@
+num m;
+m = 0;
+for (m = 0; m < m; m = add(m, 1)) {
+  halt;
+  bool m2h8;
+  m2h8 = and(F, T);
+  bool zxs;
+  if (eq(m2h8, zxs)) then {
+    num nt;
+    nt = mult(m, sub(727, m));
+    if (F) then {
+      string kzp;
+      input(nt);
+      string nk2;
+      nk2 = "evd0bu2z"
+    } else {
+      halt;
+      num x;
+      num dqss;
+      for (m = 0; m < nt; x = add(dqss, 1)) {
+        num bg;
+        bool up;
+        l
+      };
+      zk7
+    };
+    if (F) then {
+      rr;
+      string q7pk;
+      while (or(T, F)) {
+        t;
+        bool tsr6;
+        output(tsr6);
+        output(q7pk)
+      }
+    } else {
+      j9a;
+      de
+    };
+    halt;
+    string fi2k;
+    fi2k = fi2k
+  } else {
+    m = 98;
+    num n918i
+  };
+  num s1os;
+  while (eq(m, s1os)) {
+    input(m);
+    bool i;
+    i = F;
+    bool q0;
+    i = q0
+  }
+};
+m = sub(m, 8);
+
+proc l {
+  a;
+  num ea;
+  input(ea);
+  a3;
+  if (F) then {
+    m = 521;
+    bool nti;
+    if (nti) then {
+      string lxp2;
+      output(lxp2);
+      bool tikzr;
+      bool xn;
+      if (eq(tikzr, xn)) then {
+        halt;
+        string l;
+        input(l)
+      };
+      if (F) then {
+        string lh;
+        input(lh);
+        string i
+      }
+    };
+    num y;
+    input(nti)
+  };
+  string s8;
+  output(s8);
+
+  proc a {
+    num s;
+    s = 473131;
+    halt
+  }
+  proc a3 {
+    bool c;
+    halt
+  }
+
+}
+proc zk7 {
+  num k;
+  k = mult(add(add(k, 4), k), 943307);
+  bool iq9;
+  input(iq9);
+  if (T) then {
+    halt;
+    num jq;
+    if ((jq > jq)) then {
+      if (T) then {
+        num io;
+        input(k)
+      };
+      input(k);
+      ye
+    };
+    bool fy;
+    input(fy)
+  } else {
+    if (iq9) then {
+      string am;
+      string h4;
+      if (eq(am, h4)) then {
+        halt;
+        halt
+      };
+      bool y;
+      if (y) then {
+        halt;
+        num ote;
+        num z;
+        z = sub(add(ote, sub(7205, add(235191, 691))), 3)
+      };
+      c
+    };
+    e;
+    num q86b
+  };
+  qum;
+
+  proc ye {
+    num bx5;
+    num exs;
+    string v;
+    input(v)
+  }
+  proc c {
+    string o6g;
+    output(o6g);
+    qkhdj;
+
+    proc qkhdj {
+      halt
+    }
+
+  }
+  proc e {
+    num n7k;
+    n7k = add(m, sub(n7k, 2498269));
+    halt;
+    string q;
+    output(q)
+  }
+  proc qum {
+    halt;
+    while (F) {
+      c3j3;
+      halt
+    };
+    num cfi;
+    if (and(and(T, and(iq9, not (cfi < cfi))), T)) then {
+      bool c8v;
+      c8v = iq9;
+      halt
+    } else {
+      halt;
+      halt
+    };
+
+    proc c3j3 {
+      halt
+    }
+
+  }
+
+}
+proc rr {
+  string it98;
+  input(it98);
+  num q1;
+  m = sub(q1, 8);
+  it98 = "3 u0klp";
+  for (m = 0; q1 < m; m = add(m, 1)) {
+    string x;
+    num i8;
+    for (m = 0; q1 < q1; i8 = add(i8, 1)) {
+      halt;
+      while ((i8 < q1)) {
+        e;
+        num gtt;
+        gtt = mult(8, m)
+      }
+    }
+  };
+  lw;
+
+  proc e {
+    num n;
+    input(n);
+    k84qh;
+    string oi;
+
+    proc k84qh {
+      halt
+    }
+
+  }
+  proc lw {
+    bool tw6s;
+    while (and(T, and(tw6s, T))) {
+      string qzzl;
+      qzzl = "c";
+      bool znj;
+      output(znj)
+    };
+    num is;
+    num th
+  }
+
+}
+proc t {
+  bool dy2;
+  dy2 = eq(m, m);
+  string p;
+  input(p)
+}
+proc j9a {
+  bool k7f;
+  output(k7f);
+  num y2;
+  for (m = 0; m < y2; y2 = add(y2, 1)) {
+    halt;
+    string e3;
+    output(e3)
+  };
+  string y
+}
+proc de {
+  string erh;
+  output(erh);
+  num qd;
+  for (m = 0; qd < qd; m = add(qd, 1)) {
+    output(qd);
+    d
+  };
+  if ((qd < m)) then {
+    num gxk;
+    qd = add(add(gxk, add(2968, mult(add(qd, sub(64106, sub(gxk, add(m, m)))), 4184995))), 265);
+    bool yu5;
+    output(yu5);
+    input(m)
+  } else {
+    halt;
+    output(qd);
+    num v0;
+    for (v0 = 0; v0 < m; m = add(m, 1)) {
+      num yea;
+      bool y92;
+      input(y92);
+      bool nx;
+      bool bgy8t;
+      nx = bgy8t
+    };
+    bool pet
+  };
+
+  proc d {
+    num r;
+    for (qd = 0; r < qd; r = add(r, 1)) {
+      bool pgm;
+      pgm = pgm;
+      string w;
+      w = "5bz"
+    };
+    q;
+    num ckg;
+
+    proc q {
+      halt
+    }
+  }
+
+}

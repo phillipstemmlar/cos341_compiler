@@ -1,0 +1,11 @@
+bool a;
+input(a);
+num b;
+
+if(a) then{
+	b = 10
+}else{
+	b = 3
+};
+
+output(b)

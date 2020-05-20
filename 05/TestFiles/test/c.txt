@@ -1,0 +1,14 @@
+c;
+num yqx;
+for (yqx = 0; yqx < yqx; yqx = add(yqx, 1)) {
+  bool xsi;
+  input(xsi);
+  bool uz;
+  input(uz);
+  bool k;
+  k = or(and(xsi, or(uz, eq(uz, xsi))), not or((yqx < yqx), (yqx > yqx)))
+};
+
+proc c {
+  halt
+}

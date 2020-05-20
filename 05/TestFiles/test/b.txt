@@ -1,0 +1,6 @@
+string jnz;
+input(jnz);
+num o;
+o = 12154158;
+
+o = jnz

@@ -1,0 +1,10 @@
+a: no errors
+b: ! can not assign string to num
+c: no errors
+d: ! line 44 and 47. eq given a string and bool, < given num and bool
+e: ! line 16 can not assign bool to num
+f: no errors
+g: no errors
+h: ! line 539 can not assign num to string var
+i: no errors
+j: no errors

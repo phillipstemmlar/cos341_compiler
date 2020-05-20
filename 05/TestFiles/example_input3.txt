@@ -1,0 +1,15 @@
+num a;
+a = 10;
+
+num c; num d; num i;
+for(i = 0; i < a; i = add(i,1)){
+  c = 11
+};
+while ((a < c)){ d = 0 };
+
+num b;
+p;
+output(b);
+proc p {
+  b = 10
+}

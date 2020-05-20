@@ -1,0 +1,63 @@
+halt;
+num ez4;
+string text;
+if ((ez4 < ez4)) then {
+  num ewlu;
+  for (ez4 = 0; ewlu < ez4; ez4 = add(ewlu, 1)) {
+    halt;
+    num s12;
+    s12 = ewlu
+  };
+  ni;
+  halt
+} else {
+  bool l5;
+  output(l5);
+  string i84;
+  num dg;
+  for (ez4 = 0; dg < ez4; dg = add(dg, 1)) {
+    string lus;
+    bool ozx9
+  }
+};
+bool mg;
+if (not mg) then {
+  string mqh;
+  input(mqh);
+  halt;
+  halt
+} else {
+  ez4 = 63207620;
+  num u1;
+  input(u1);
+  string ek4r
+};
+if ((ez4 < ez4)) then {
+  string c;
+  bool jnm
+};
+
+proc ni {
+  fz1;
+  c8;
+  bool mg;
+  if (eq(mg, text)) then {
+    halt
+  } else {
+    if (not (ez4 < mg)) then {
+      halt
+    } else {
+      if (eq(text, text)) then {
+        halt
+      }
+    }
+  };
+
+  proc fz1 {
+    halt
+  }
+  proc c8 {
+    halt
+  }
+
+}

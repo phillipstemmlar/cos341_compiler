@@ -1,0 +1,8 @@
+num a;
+num b;
+num c;
+
+
+proc foo {
+  c = add(a, b)  
+}

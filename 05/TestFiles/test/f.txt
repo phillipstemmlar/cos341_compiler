@@ -1,0 +1,42 @@
+num n;
+num m;
+mt;
+
+proc mt {
+  if (T) then {
+    halt;
+    string w;
+    num i;
+    bool k;
+    if (and(not (i > n), k)) then {
+      num z;
+      input(z);
+      output(i)
+    } else {
+      num ze7a;
+      string vyo;
+      w = vyo
+    }
+  };
+  num fq7;
+  for (fq7 = 0; n < n; n = add(fq7, 1)) {
+    num edx;
+    while ((edx > n)) {
+      string b;
+      input(b);
+      num s5;
+      s5 = mult(mult(n, s5), sub(35108780, 89982))
+    };
+    for (edx = 0; m < edx; fq7 = add(fq7, 1)) {
+      bool v;
+      string text;
+      num int;
+      bool truth;
+      input(text);
+      input(int);
+      input(truth)
+    };
+    string bu
+  };
+  halt
+}

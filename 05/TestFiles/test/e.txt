@@ -1,0 +1,19 @@
+bool w2i;
+while (w2i) {
+  string jtw;
+  halt
+};
+num z;
+z = z;
+output(z);
+
+proc foo {
+  halt;
+  num k;
+
+  proc bar {
+    if (T) then {
+      k = w2i
+    }
+  }
+}
