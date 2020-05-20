@@ -221,10 +221,6 @@ public class Scope{
 		System.out.println("->\t" + Arrays.toString(sub_Scopes.keySet().toArray()) );
 		System.out.println("=>\t" + Arrays.toString(variableNameTable.keySet().toArray()) + " => " + Arrays.toString(variableNameTable.values().toArray()) );
 		System.out.println("=>\t" + Arrays.toString(procedureNameTable.keySet().toArray()) + " => " + Arrays.toString(procedureNameTable.values().toArray()) );
-		// System.out.println("\t" + Arrays.toString(DECL_Lines.toArray()) );
-		// System.out.println("\t" + Arrays.toString(VAR_Lines.toArray()) );
-		// System.out.println("\t" + Arrays.toString(PROC_Lines.toArray()) );
-		// System.out.println("\t" + Arrays.toString(CALL_Lines.toArray()) );
 	}
 
 }

@@ -7,9 +7,12 @@ public class Translator{
 	int lineNumber = 0;
 	int varCount = 0;
 
+	List<BasicNode> basicNodes = null;
+	HashMap<String, BasicNode_LABEL> labels = null;
+
 	public Translator(){}
 
-	public void execute(HashMap<Integer, SyntaxNode> symTree, HashMap<Integer, Scope> scopeTbl, String BASIC_file){
+	public void execute(HashMap<Integer, SyntaxNode> symTree, HashMap<Integer, Scope> scopeTbl, String BASIC_file, String abstract_file){
 		if(symTree != null && scopeTbl != null && BASIC_file.length() > 0){
 			symbolTree = symTree;
 			scopeTable = scopeTbl;
@@ -17,11 +20,21 @@ public class Translator{
 			// System.out.println(symbolTree.get(0).treeString());
 			deconstructTree();
 			setProcLineNumbers();
+
 			System.out.println(symbolTree.get(0).treeString());
 
-			String output_code = translate();
+			translateAbstract();
+			String basicAbstractString = "";
+			for(BasicNode node : basicNodes){
+				basicAbstractString += node.line();
+			}
+			Helper.writeToFile(abstract_file,basicAbstractString);
 
-			Helper.writeToFile(BASIC_file, output_code);
+			// scopeTable.get(0).print();
+
+			// String output_code = translate(basicAbstractTree);
+
+			// Helper.writeToFile(BASIC_file, output_code);
 		}
 	}
 
@@ -38,7 +51,7 @@ public class Translator{
 		else if(isPrimitive(node.token)){
 			return ((LeafSyntaxNode)node).val();
 		}
-		else if(isIO(node.token) || isOP(node.token)){
+		else if(isIO(node.token) || isOP(node.token) || isPrimitiveBOOL(node.token)){
 			return TOKENtoBASIC(node.token);
 		}
 		else if(node.token == Token.eToken.VAR){
@@ -51,9 +64,6 @@ public class Translator{
 				return lineNumber + " " + translate(INS,scope, false) + "\n";
 			}
 			return "";
-		}
-		else if(node.token == Token.eToken.DECL){				//DECL string
-			return "";	//no DECL in BASIC
 		}
 		else if(node.token == Token.eToken.ASSIGN){			//ASSIGN
 			String var = translate(((CompositeSyntaxNode)node).children.get(0),scope, false);
@@ -75,14 +85,23 @@ public class Translator{
 			return n1 + " " + op + " " + n2;
 		}
 		else if(node.token == Token.eToken.PROC){
+			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)node).children.get(1));
+			Procedure proc = scope.getProcedureByName(proc_name.val());
+			String toEND = "";
+			if(proc.first){
+				incLine();
+				toEND = lineNumber + " END" + "\n";
+			}
 			String PROG = translate(((CompositeSyntaxNode)node).children.get(2),scope, false);
 			incLine();
-			return PROG + lineNumber + " " + "RETURN" + "\n";
+			String PROC = toEND + PROG + lineNumber + " " + "RETURN" + "\n";
+			// incLine();
+			return PROC;
 		}
 		else if(node.token == Token.eToken.CALL){
 			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)node).children.get(0));
 			Procedure proc = scope.getProcedureByName(proc_name.val());
-			return  "GOTO" + " " + proc.basic_line;
+			return  "GOSUB" + " " + proc.basic_line;
 		}
 
 		if(!node.isLeaf()){
@@ -227,6 +246,8 @@ public class Translator{
 
 	private void setProcLineNumbers(){
 		lineNumber = 0;
+		Procedure.foundFirst = false;
+		labels = new HashMap<>();
 		setProcLineNumbers(symbolTree.get(0), scopeTable.get(0), true);
 	}
 
@@ -239,11 +260,23 @@ public class Translator{
 		else if(node.token == Token.eToken.PROC){
 			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)node).children.get(1));
 			Procedure proc = scope.getProcedureByName(proc_name.val());
+
+			if(Procedure.foundFirst == false)	proc.first = true;
+			if(proc.first) incLine();
+			Procedure.foundFirst = true;
+
+			labels.put(proc.name(), new BasicNode_LABEL(proc.name()));
+
+			incLine();
 			proc.basic_line = lineNumber;
 			setProcLineNumbers(((CompositeSyntaxNode)node).children.get(2), scope, false);
-			incLine();
+			return;
 		}else if(node.token == Token.eToken.INSTR){
-			incLine();
+			SyntaxNode INS = ((CompositeSyntaxNode)node).children.get(0);
+			if(INS.token != Token.eToken.DECL){
+				incLine();
+			}
+			return;
 		}
 
 		if(!node.isLeaf()){
@@ -251,6 +284,81 @@ public class Translator{
 				setProcLineNumbers(child,scope, false);
 			}
 		}
+	}
+
+
+	private void translateAbstract(){
+		basicNodes = new ArrayList<>();
+		labels.put("H",new BasicNode_LABEL("H"));
+		translateAbstract(symbolTree.get(0), scopeTable.get(0), true);
+		basicNodes.add(labels.get("H"));
+	}
+
+	private void translateAbstract(SyntaxNode sNode, Scope scope, Boolean first){
+		if(sNode.token == Token.eToken.PROG){
+			scope = first? scope : scope.getScopeByIndex(sNode.index);
+			if(scope == null) return;
+		}
+		if(sNode.token == Token.eToken.INSTR){
+			SyntaxNode INS = ((CompositeSyntaxNode)sNode).children.get(0);
+			if(INS.token == Token.eToken.CALL){
+				LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)INS).children.get(0));
+				Procedure proc = scope.getProcedureByName(proc_name.val());
+				basicNodes.add(new BasicNode_GOSUB(proc));
+			}
+			else if(INS.token != Token.eToken.DECL){
+				String instr = nodeToString(INS, scope);
+				basicNodes.add(new BasicNode(instr));
+			}
+		}
+		else if(sNode.token == Token.eToken.PROC){
+			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)sNode).children.get(1));
+			Procedure proc = scope.getProcedureByName(proc_name.val());
+			if(proc.first) basicNodes.add(new BasicNode_END());
+			basicNodes.add(labels.get(proc.name()));
+			translateAbstract(((CompositeSyntaxNode)sNode).children.get(2),scope, false);
+			basicNodes.add(new BasicNode("RETURN"));
+		}
+		else if(sNode.token == Token.eToken.CALL){
+		
+		}
+		else if(!sNode.isLeaf()){
+			for(SyntaxNode child : ((CompositeSyntaxNode)sNode).children){
+				translateAbstract(child,scope, false);
+			}
+		}
+	}
+
+	private String nodeToString(SyntaxNode node, Scope scope){
+		if(isPrimitive(node.token)){
+			return ((LeafSyntaxNode)node).val();
+		}
+		else if(isIO(node.token) || isOP(node.token) || isPrimitiveBOOL(node.token)){
+			return TOKENtoBASIC(node.token);
+		}
+		else if(node.token == Token.eToken.VAR){
+			return nodeToString(((CompositeSyntaxNode)node).children.get(0),scope) + typeSuffix(node.type);
+		}
+		else if(node.token == Token.eToken.ASSIGN){			//ASSIGN
+			String var = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
+			String value = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
+			return var + " = " + value;
+		}
+		else if(node.token == Token.eToken.IO){			//OUTPUT	
+			String io = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
+			String var = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
+			return io + " " + var;
+		}
+		else if(node.token == Token.eToken.NUMEXPR){
+			return nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
+		}
+		else if(node.token == Token.eToken.CALC){
+			String op = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
+			String n1 = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
+			String n2 = nodeToString(((CompositeSyntaxNode)node).children.get(2),scope);
+			return n1 + " " + op + " " + n2;
+		}
+		return "#--basicString err("+node.token+")--##";
 	}
 
 	private void incLine(){
@@ -270,8 +378,12 @@ public class Translator{
 	}
 
 	private Boolean isPrimitive(Token.eToken token){
-		return token == Token.eToken.tok_string_literal || token == Token.eToken.tok_integer_literal || token == Token.eToken.tok_user_defined_identifier
-		|| token == Token.eToken.tok_T || token == Token.eToken.tok_F;
+		return token == Token.eToken.tok_string_literal || token == Token.eToken.tok_integer_literal 
+		|| token == Token.eToken.tok_user_defined_identifier;
+	}
+
+	private Boolean isPrimitiveBOOL(Token.eToken token){
+		return token == Token.eToken.tok_T || token == Token.eToken.tok_F;
 	}
 
 	//================TOKEN TRANSLATION============
@@ -282,6 +394,8 @@ public class Translator{
 		if(token == Token.eToken.tok_add) return "+";
 		if(token == Token.eToken.tok_sub) return "-";
 		if(token == Token.eToken.tok_mult) return "*";
+		if(token == Token.eToken.tok_T) return "1";
+		if(token == Token.eToken.tok_F) return "0";
 		if(token == Token.eToken.tok_eq) return "=";
 		if(token == Token.eToken.tok_less_than) return "<";
 		if(token == Token.eToken.tok_greater_than) return ">";

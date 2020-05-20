@@ -20,6 +20,8 @@ public class Compiler {
 	private static final String Value_SyntaxTree_output_file = "Value_SyntaxTree_output.txt";
 	private static final String Value_SymbolTable_output_file = "Value_SymbolTable_output.txt";
 
+	private static final String Translator_abstract_output_file = "Translator_AbstractSource_output.txt";
+
 	private static final String LEXER_PREFIX = "Lexical Error";
 	private static final String PARSER_PREFIX = "Syntax Error";
 	private static final String SCOPER_PREFIX = "Scoping Error";
@@ -70,7 +72,7 @@ public class Compiler {
 						semanticAnalyzer.nodeTable = symbolTree;
 						scopeTable = semanticAnalyzer.executeValueToFile(symbolTree, Value_SyntaxTree_output_file, Value_SymbolTable_output_file, Value_SyntaxTree_vis_output_fle);
 					if(scopeTable != null && symbolTree != null){
-						translator.execute(symbolTree,scopeTable, BASIC_file);
+						translator.execute(symbolTree,scopeTable, BASIC_file, Translator_abstract_output_file);
 					}
 					}
 				}

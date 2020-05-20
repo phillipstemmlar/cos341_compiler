@@ -35,8 +35,12 @@ exec:
 	mkdir -p ${BuildDir}
 	${EXE} -${JAR} ${BIN}/${JAR_FILE} $(INPUT_FILE)
 
-test: run
+basic:
+	cat ${BASIC_FILE}
 	${INTERP} ${BASIC_FILE}
+
+test: run
+	make basic
 
 clean:
 	-rm -f *.class $(OUTPUT_FILE)
@@ -51,7 +55,7 @@ again: make
 	clear
 	make run
 
-go: again
+go: make
 	clear
 	make test
 

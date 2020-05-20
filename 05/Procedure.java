@@ -11,6 +11,8 @@ class Procedure{
 
 	public Integer index;
 	public Integer basic_line = -1;
+	public Boolean first = false;
+	public static Boolean foundFirst = false;
 
 	public Procedure(String name, Integer ind, Scope scope_, Scope innerScope_){
 		this.ogname = name;
@@ -66,7 +68,7 @@ class Procedure{
 	}
 
 	public String toString(){
-		return name();
+		return name() + ":" + basic_line;
 	}
 
 	public static final Variable.Type Type = Helper.tokenToType(Token.eToken.PROC);
