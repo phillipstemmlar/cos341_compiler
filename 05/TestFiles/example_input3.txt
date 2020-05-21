@@ -13,3 +13,20 @@ output(b);
 proc p {
   b = 10
 }
+
+//==========
+
+num r;
+num s;
+string b;
+r = add(2,1);
+r = r;
+init;
+for(r = 0; r < r; r = add(r,1)){
+	r = r
+};
+output(b);
+
+proc init {
+	r = 1
+}

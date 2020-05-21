@@ -1,11 +1,10 @@
-bool a;
-input(a);
-num b;
+bool n1;
+string ans;
 
-if(a) then{
-	b = 10
-}else{
-	b = 3
-};
+if(T)then{ ans = "true" }
+else{ ans = "false" };
+print;
 
-output(b)
+proc print{
+  output(ans)
+}

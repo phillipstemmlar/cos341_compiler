@@ -1,7 +1,5 @@
-num count;
-count = 10;
-print;
+bool b;
 
-proc print{
-  output(count)
-}
+b = and(or(F,and(T,F)),or(T,F));
+
+output(b)

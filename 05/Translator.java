@@ -17,102 +17,208 @@ public class Translator{
 			symbolTree = symTree;
 			scopeTable = scopeTbl;
 
-			// System.out.println(symbolTree.get(0).treeString());
-			deconstructTree();
-			setProcLineNumbers();
-
 			System.out.println(symbolTree.get(0).treeString());
+			deconstructTree();
+			System.out.println(symbolTree.get(0).treeString());
+
+			setProcLineNumbers();
 
 			translateAbstract();
 			String basicAbstractString = "";
 			for(BasicNode node : basicNodes){
-				basicAbstractString += node.line();
+				basicAbstractString += node.str();
 			}
 			Helper.writeToFile(abstract_file,basicAbstractString);
 
-			// scopeTable.get(0).print();
-
-			// String output_code = translate(basicAbstractTree);
-
-			// Helper.writeToFile(BASIC_file, output_code);
+			String output_code = translate();
+			Helper.writeToFile(BASIC_file, output_code);
 		}
 	}
 
 	private String translate(){
 		lineNumber = 0;
-		return translate(symbolTree.get(0), scopeTable.get(0), true);
+		String basicString = "";
+		BasicNode prevLabel = null;
+		for(BasicNode node : basicNodes){
+			if(node.label && !node.end){
+				prevLabel = node;
+			}else{
+				incLine();
+				node.line(lineNumber);
+				if(prevLabel != null) prevLabel.line(lineNumber);
+				prevLabel = null;
+			}
+		}
+		for(BasicNode node : basicNodes){
+			if(node.goto_){
+				String label = ((BasicNode_GOTO)node).JumpTo();
+				Integer line = labels.get(label).line();
+				((BasicNode_GOTO)node).JumpTo(line + "");
+			}else if(node.gosub){
+				String label = ((BasicNode_GOSUB)node).JumpTo();
+				Integer line = labels.get(label).line();
+				((BasicNode_GOSUB)node).JumpTo(line + "");
+			}
+		}
+		for(BasicNode node : basicNodes){
+			if(node.end && node.label || !node.label){
+				basicString += node.basic();
+			}
+		}
+
+		return basicString;
 	}
 
-	private String translate(SyntaxNode node, Scope scope, Boolean first){
-		if(node.token == Token.eToken.PROG){
+	private void setProcLineNumbers(){
+		lineNumber = 0;
+		Procedure.foundFirst = false;
+		labels = new HashMap<>();
+		setProcLineNumbers(symbolTree.get(0), scopeTable.get(0), true);
+	}
+
+	private void setProcLineNumbers(SyntaxNode node, Scope scope, Boolean first){
+		if(node == null) return;
+		else if(node.token == Token.eToken.PROG){
 			scope = first? scope : scope.getScopeByIndex(node.index);
-			if(scope == null) return "";
+			if(scope == null) return;
 		}
-		else if(isPrimitive(node.token)){
+		else if(node.token == Token.eToken.PROC){
+			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)node).children.get(1));
+			Procedure proc = scope.getProcedureByName(proc_name.val());
+
+			if(Procedure.foundFirst == false)	proc.first = true;
+			if(proc.first) incLine();
+			Procedure.foundFirst = true;
+
+			int id = BasicNode_LABEL.countINC();
+			labels.put(proc.name(), new BasicNode_LABEL(proc.name()+id));
+
+			incLine();
+			proc.basic_line = lineNumber;
+			setProcLineNumbers(((CompositeSyntaxNode)node).children.get(2), scope, false);
+			return;
+		}else if(node.token == Token.eToken.INSTR){
+			SyntaxNode INS = ((CompositeSyntaxNode)node).children.get(0);
+			if(INS.token != Token.eToken.DECL){
+				incLine();
+			}
+			return;
+		}
+
+		if(!node.isLeaf()){
+			for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
+				setProcLineNumbers(child,scope, false);
+			}
+		}
+	}
+
+	private void translateAbstract(){
+		basicNodes = new ArrayList<>();
+		labels.put("H",new BasicNode_EOF());
+		translateAbstract(symbolTree.get(0), scopeTable.get(0), true);
+		basicNodes.add(labels.get("H"));
+	}
+
+	private void translateAbstract(SyntaxNode sNode, Scope scope, Boolean first){
+		if(sNode.token == Token.eToken.PROG){
+			scope = first? scope : scope.getScopeByIndex(sNode.index);
+			if(scope == null) return;
+		}
+		if(sNode.token == Token.eToken.INSTR){
+			SyntaxNode INS = ((CompositeSyntaxNode)sNode).children.get(0);
+			if(INS.token == Token.eToken.CALL){
+				LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)INS).children.get(0));
+				basicNodes.add(new BasicNode_GOSUB(proc_name.val()));
+			}
+			else if(INS.token == Token.eToken.COND_BRANCH){
+				int id = BasicNode_LABEL.countINC();
+				String Bool = nodeToString(((CompositeSyntaxNode)INS).children.get(1), scope);
+				String THEN = "THEN"+id;  String EndIF = "ENDIF"+id;
+				basicNodes.add(new BasicNode_IFTHEN(Bool, THEN));
+						
+				if(((CompositeSyntaxNode)INS).children.size() > 4){				//ELSE-BRANCH
+					translateAbstract(((CompositeSyntaxNode)INS).children.get(5), scope, false);
+				}
+				basicNodes.add(new BasicNode_GOTO(EndIF));				//GOTO EndIF
+
+				labels.put(THEN, new BasicNode_LABEL(THEN));			//THEN-BRANCH
+				basicNodes.add(labels.get(THEN));
+				translateAbstract(((CompositeSyntaxNode)INS).children.get(3), scope, false);
+
+				labels.put(EndIF, new BasicNode_LABEL(EndIF));
+				basicNodes.add(labels.get(EndIF));
+			}
+			else if(INS.token != Token.eToken.DECL){
+				String instr = nodeToString(INS, scope);
+				basicNodes.add(new BasicNode(instr));
+			}
+		}
+		else if(sNode.token == Token.eToken.PROC){
+			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)sNode).children.get(1));
+			Procedure proc = scope.getProcedureByName(proc_name.val());
+			if(proc.first) basicNodes.add(new BasicNode_END());
+			basicNodes.add(labels.get(proc.name()));
+			translateAbstract(((CompositeSyntaxNode)sNode).children.get(2),scope, false);
+			basicNodes.add(new BasicNode("RETURN"));
+		}
+		else if(!sNode.isLeaf()){
+			for(SyntaxNode child : ((CompositeSyntaxNode)sNode).children){
+				translateAbstract(child,scope, false);
+			}
+		}
+	}
+
+	private String nodeToString(SyntaxNode node, Scope scope){
+		if(isPrimitive(node.token)){
 			return ((LeafSyntaxNode)node).val();
 		}
 		else if(isIO(node.token) || isOP(node.token) || isPrimitiveBOOL(node.token)){
 			return TOKENtoBASIC(node.token);
 		}
 		else if(node.token == Token.eToken.VAR){
-			return translate(((CompositeSyntaxNode)node).children.get(0),scope, false) + typeSuffix(node.type);
-		}
-		else if(node.token == Token.eToken.INSTR){
-			SyntaxNode INS = ((CompositeSyntaxNode)node).children.get(0);
-			if(INS.token != Token.eToken.DECL){
-				incLine();
-				return lineNumber + " " + translate(INS,scope, false) + "\n";
-			}
-			return "";
+			return nodeToString(((CompositeSyntaxNode)node).children.get(0),scope) + typeSuffix(node.type);
 		}
 		else if(node.token == Token.eToken.ASSIGN){			//ASSIGN
-			String var = translate(((CompositeSyntaxNode)node).children.get(0),scope, false);
-			String value = translate(((CompositeSyntaxNode)node).children.get(1),scope, false);
+			String var = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
+			String value = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
 			return var + " = " + value;
 		}
 		else if(node.token == Token.eToken.IO){			//OUTPUT	
-			String io = translate(((CompositeSyntaxNode)node).children.get(0),scope, false);
-			String var = translate(((CompositeSyntaxNode)node).children.get(1),scope, false);
+			String io = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
+			String var = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
 			return io + " " + var;
 		}
 		else if(node.token == Token.eToken.NUMEXPR){
-			return translate(((CompositeSyntaxNode)node).children.get(0),scope, false);
+			return nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
 		}
 		else if(node.token == Token.eToken.CALC){
-			String op = translate(((CompositeSyntaxNode)node).children.get(0),scope, false);
-			String n1 = translate(((CompositeSyntaxNode)node).children.get(1),scope, false);
-			String n2 = translate(((CompositeSyntaxNode)node).children.get(2),scope, false);
+			String op = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
+			String n1 = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
+			String n2 = nodeToString(((CompositeSyntaxNode)node).children.get(2),scope);
 			return n1 + " " + op + " " + n2;
 		}
-		else if(node.token == Token.eToken.PROC){
-			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)node).children.get(1));
-			Procedure proc = scope.getProcedureByName(proc_name.val());
-			String toEND = "";
-			if(proc.first){
-				incLine();
-				toEND = lineNumber + " END" + "\n";
-			}
-			String PROG = translate(((CompositeSyntaxNode)node).children.get(2),scope, false);
-			incLine();
-			String PROC = toEND + PROG + lineNumber + " " + "RETURN" + "\n";
-			// incLine();
-			return PROC;
-		}
-		else if(node.token == Token.eToken.CALL){
-			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)node).children.get(0));
-			Procedure proc = scope.getProcedureByName(proc_name.val());
-			return  "GOSUB" + " " + proc.basic_line;
-		}
+		else if(node.token == Token.eToken.BOOL){
+			SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
+			SyntaxNode SECOND = (((CompositeSyntaxNode)node).children.size() >= 2)?((CompositeSyntaxNode)node).children.get(1) : null;
 
-		if(!node.isLeaf()){
-			String out = "";
-			for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
-				out += translate(child,scope, false);
+			if(SECOND != null && isOP(SECOND.token)){
+				String n1 = nodeToString(FIRST,scope);
+				String op = nodeToString(SECOND,scope);
+				String n2 = nodeToString(((CompositeSyntaxNode)node).children.get(2),scope);
+				return n1 + " " + op + " " + n2;
+			}else if(isPrimitiveBOOL(FIRST.token) || FIRST.token == Token.eToken.VAR){
+				return nodeToString(FIRST,scope);
 			}
-			return out;
+			else if(isNot(FIRST.token)){
+				String not = nodeToString(FIRST,scope);
+				String bool = nodeToString(SECOND,scope);
+				return not + " " + bool;
+			}
+
 		}
-		return "";
+		return "##--basicString err("+node.token+")--##";
 	}
+
 
 	private void deconstructTree(){
 		varCount = Variable.count();
@@ -134,15 +240,11 @@ public class Translator{
 			SyntaxNode n2 = N2.isLeaf() ? null : ((CompositeSyntaxNode)N2).children.get(0);
 
 			if(n1 != null && n1.token == Token.eToken.CALC){
-				Helper.success("NESTED CALC1");
 				SyntaxNode parCODE = n1.parent;
-				Helper.success("\t"+ (parCODE != null ? parCODE.name() : "null"));
 				while(parCODE != null && parCODE.token != Token.eToken.CODE){
 					parCODE = parCODE.parent; 
-					Helper.success("\t"+ (parCODE != null ? parCODE.name() : "null"));
 				}
 				if(parCODE != null){
-					Helper.success("PARENT CODE1");
 					CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
 					newCODE.children = ((CompositeSyntaxNode)parCODE).children;
 					((CompositeSyntaxNode)parCODE).resetChildren();
@@ -183,15 +285,11 @@ public class Translator{
 			}
 
 			if(n2 != null && n2.token == Token.eToken.CALC){
-				Helper.success("NESTED CALC2");
 				SyntaxNode parCODE = n2.parent;
-				Helper.success("\t"+ (parCODE != null ? parCODE.name() : "null"));
 				while(parCODE != null && parCODE.token != Token.eToken.CODE){
 					parCODE = parCODE.parent; 
-					Helper.success("\t"+ (parCODE != null ? parCODE.name() : "null"));
 				}
 				if(parCODE != null){
-					Helper.success("PARENT CODE2");
 					CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
 					newCODE.children = ((CompositeSyntaxNode)parCODE).children;
 					((CompositeSyntaxNode)parCODE).resetChildren();
@@ -235,6 +333,241 @@ public class Translator{
 			deconstructTree(n2,scope, false);
 			return;
 		}
+		else if(node.token == Token.eToken.BOOL){
+			Helper.success("BOOL");
+			SyntaxNode FIRST = ((CompositeSyntaxNode)node).children.get(0);
+
+			if(isAndOr(FIRST.token)){
+				Helper.success("AND-OR");
+				Token.eToken opToken = FIRST.token;
+				SyntaxNode SECOND = (((CompositeSyntaxNode)node).children.size() >= 2)?((CompositeSyntaxNode)node).children.get(1) : null;
+				SyntaxNode THIRD = (((CompositeSyntaxNode)node).children.size() >= 3)?((CompositeSyntaxNode)node).children.get(2) : null;
+	
+				// deconstructTree(THIRD,scope, false);
+
+				Integer temp = varCount++;
+				/*
+				cond = or(b1,b2);
+
+				temp = not b1;
+				if(temp) then{ temp = not b2 }
+				cond = not temp
+				*/
+
+				/*
+				cond = and(b1,b2);
+				
+				temp = b1;
+				if(temp) then{ temp = b2 };
+				cond = temp;
+				*/
+				//if(temp) then{ temp = not b2 }
+				SyntaxNode parCODE = FIRST.parent;
+				while(parCODE != null && parCODE.token != Token.eToken.CODE){
+					parCODE = parCODE.parent; 
+				}
+				if(parCODE != null){
+					CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
+					newCODE.children = ((CompositeSyntaxNode)parCODE).children;
+					((CompositeSyntaxNode)parCODE).resetChildren();
+
+					//IF - BOOL - THEN - CODE
+					CompositeSyntaxNode newINSTR = new CompositeSyntaxNode(Token.eToken.INSTR, "");
+					CompositeSyntaxNode newCOND_BRANCH = new CompositeSyntaxNode(Token.eToken.COND_BRANCH, "");
+
+					LeafSyntaxNode new_if = new LeafSyntaxNode(Token.eToken.tok_if, "");
+					CompositeSyntaxNode newBOOL = new CompositeSyntaxNode(Token.eToken.BOOL, "");
+					CompositeSyntaxNode newVAR = new CompositeSyntaxNode(Token.eToken.VAR, "");
+					LeafSyntaxNode new_var = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
+					LeafSyntaxNode new_then = new LeafSyntaxNode(Token.eToken.tok_then, "");
+					CompositeSyntaxNode newCODE_i = new CompositeSyntaxNode(Token.eToken.BOOL, "");
+					new_var.val("V" + temp);
+					new_var.type = Variable.Type.bool;
+					
+					newVAR.addChild(new_var);
+					newVAR.type = Variable.Type.bool;
+					newBOOL.addChild(newVAR);
+
+						//temp = not b2
+						CompositeSyntaxNode newINSTR_i = new CompositeSyntaxNode(Token.eToken.INSTR, "");
+						CompositeSyntaxNode newASSIGN_i = new CompositeSyntaxNode(Token.eToken.ASSIGN, "");
+						CompositeSyntaxNode newVAR_i = new CompositeSyntaxNode(Token.eToken.VAR, "");
+						LeafSyntaxNode new_var_i = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
+						CompositeSyntaxNode newBOOL_i = new CompositeSyntaxNode(Token.eToken.BOOL, "");
+
+						newBOOL_i.children = ((CompositeSyntaxNode)THIRD).children;
+						((CompositeSyntaxNode)THIRD).resetChildren();
+
+						new_var_i.val("V" + temp);
+						new_var_i.type = Variable.Type.bool;
+
+						if(opToken == Token.eToken.tok_or){
+							CompositeSyntaxNode newNOT = new CompositeSyntaxNode(Token.eToken.BOOL, "");
+							LeafSyntaxNode new_not = new LeafSyntaxNode(Token.eToken.tok_not, "");
+							newNOT.addChild(newBOOL_i);
+							newNOT.addChild(new_not);
+							newBOOL_i = newNOT;
+						}
+
+						//SETUP INSTR
+						newASSIGN_i.addChild(newBOOL_i);
+						newVAR_i.addChild(new_var_i);
+						newVAR_i.type = Variable.Type.bool;
+						newASSIGN_i.addChild(newVAR_i);
+						newINSTR_i.addChild(newASSIGN_i);
+
+						newCODE_i.addChild(newINSTR_i);
+
+
+					//SETUP INSTR
+					newCOND_BRANCH.addChild(newCODE_i);
+					newCOND_BRANCH.addChild(new_then);
+					newCOND_BRANCH.addChild(newBOOL);
+					newCOND_BRANCH.addChild(new_if);
+					newINSTR.addChild(newCOND_BRANCH);
+
+					((CompositeSyntaxNode)parCODE).addChild(newCODE);
+					((CompositeSyntaxNode)parCODE).addChild(newINSTR);
+
+					deconstructTree(newBOOL_i,scope, false);
+				}
+				//	temp = not b1
+				parCODE = FIRST.parent;
+				while(parCODE != null && parCODE.token != Token.eToken.CODE){
+					parCODE = parCODE.parent; 
+				}
+				if(parCODE != null){
+					CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
+					newCODE.children = ((CompositeSyntaxNode)parCODE).children;
+					((CompositeSyntaxNode)parCODE).resetChildren();
+
+					CompositeSyntaxNode newINSTR = new CompositeSyntaxNode(Token.eToken.INSTR, "");
+					CompositeSyntaxNode newASSIGN = new CompositeSyntaxNode(Token.eToken.ASSIGN, "");
+					CompositeSyntaxNode newVAR = new CompositeSyntaxNode(Token.eToken.VAR, "");
+					LeafSyntaxNode new_var = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
+					CompositeSyntaxNode newBOOL = new CompositeSyntaxNode(Token.eToken.BOOL, "");
+
+					newBOOL.children = ((CompositeSyntaxNode)SECOND).children;
+					((CompositeSyntaxNode)SECOND).resetChildren();
+
+					new_var.val("V" + temp);
+
+					if(opToken == Token.eToken.tok_or){
+						CompositeSyntaxNode newNOT = new CompositeSyntaxNode(Token.eToken.BOOL, "");
+						LeafSyntaxNode new_not = new LeafSyntaxNode(Token.eToken.tok_not, "");
+						newNOT.addChild(newBOOL);
+						newNOT.addChild(new_not);
+						newBOOL = newNOT;
+					}
+
+					//SETUP INSTR
+					newASSIGN.addChild(newBOOL);
+					newVAR.addChild(new_var);
+					newVAR.type = Variable.Type.bool;
+					newASSIGN.addChild(newVAR);
+					newINSTR.addChild(newASSIGN);
+
+					((CompositeSyntaxNode)parCODE).addChild(newCODE);
+					((CompositeSyntaxNode)parCODE).addChild(newINSTR);
+
+					CompositeSyntaxNode newVAR2 = new CompositeSyntaxNode(Token.eToken.VAR, "");
+					LeafSyntaxNode new_var2 = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
+					new_var2.val("V" + temp);
+
+					newVAR2.addChild(new_var2);
+					newVAR2.type = Variable.Type.bool;
+					((CompositeSyntaxNode)SECOND).addChild(newVAR2);
+				
+					deconstructTree(newBOOL,scope, false);
+				}
+
+				//	cond = not temp
+				CompositeSyntaxNode nodeParent = (CompositeSyntaxNode)node;
+				if(nodeParent != null){
+					nodeParent.resetChildren();
+
+					CompositeSyntaxNode newVAR = new CompositeSyntaxNode(Token.eToken.VAR, "");
+					LeafSyntaxNode new_var = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
+					new_var.val("V" + temp);
+
+					newVAR.addChild(new_var);
+					newVAR.type = Variable.Type.bool;
+
+					if(opToken == Token.eToken.tok_or){
+						CompositeSyntaxNode newBOOL = new CompositeSyntaxNode(Token.eToken.BOOL, "");
+						LeafSyntaxNode new_not = new LeafSyntaxNode(Token.eToken.tok_not, "");
+						newBOOL.addChild(newVAR);
+						nodeParent.addChild(newBOOL);
+						nodeParent.addChild(new_not);
+					}else{
+						nodeParent.addChild(newVAR);
+					}
+
+				}
+			}
+		}
+		else if(node.token == Token.eToken.COND_BRANCH){
+			//TEST if valid case
+			SyntaxNode BOOL = ((CompositeSyntaxNode)node).children.get(1);
+			SyntaxNode FIRST = ((CompositeSyntaxNode)BOOL).children.get(0);
+
+			if(FIRST.token != Token.eToken.VAR){
+				SyntaxNode parCODE = node.parent;
+				while(parCODE != null && parCODE.token != Token.eToken.CODE){
+					parCODE = parCODE.parent; 
+				}
+				if(parCODE != null){
+					CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
+					newCODE.children = ((CompositeSyntaxNode)parCODE).children;
+					((CompositeSyntaxNode)parCODE).resetChildren();
+
+					CompositeSyntaxNode newINSTR = new CompositeSyntaxNode(Token.eToken.INSTR, "");
+					CompositeSyntaxNode newASSIGN = new CompositeSyntaxNode(Token.eToken.ASSIGN, "");
+					CompositeSyntaxNode newVAR = new CompositeSyntaxNode(Token.eToken.VAR, "");
+					LeafSyntaxNode new_var = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
+					CompositeSyntaxNode newBOOL = new CompositeSyntaxNode(Token.eToken.BOOL, "");
+
+					CompositeSyntaxNode newVAR2 = new CompositeSyntaxNode(Token.eToken.VAR, "");
+					LeafSyntaxNode new_var2 = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
+					varCount++;
+					new_var.val("V" + varCount);
+					new_var2.val("V" + varCount);
+
+					newBOOL.children = ((CompositeSyntaxNode)BOOL).children;
+					((CompositeSyntaxNode)BOOL).resetChildren();
+
+					//SETUP INSTR
+					newASSIGN.addChild(newBOOL);
+					newVAR.addChild(new_var);
+					newVAR.type = Variable.Type.bool;
+					newASSIGN.addChild(newVAR);
+					newINSTR.addChild(newASSIGN);
+
+					((CompositeSyntaxNode)parCODE).addChild(newCODE);
+					((CompositeSyntaxNode)parCODE).addChild(newINSTR);
+
+					newVAR2.addChild(new_var2);
+					newVAR2.type = Variable.Type.bool;
+					((CompositeSyntaxNode)BOOL).addChild(newVAR2);
+					// SyntaxNode[] nodes = new SyntaxNodes[((CompositeSyntaxNode)node).children.size()];
+
+					// for(int i = 0; i < ((CompositeSyntaxNode)node).children.size(); ++i){
+					// 	SyntaxNode child = null;
+					// 	if(i == 1){
+					// 		child = newBool;
+					// 	}else{
+					// 		chld = ((CompositeSyntaxNode)node).children.get(i);
+					// 	}
+					// }
+
+					// ((CompositeSyntaxNode)node).resetChildren();
+					// ((CompositeSyntaxNode)node).addChild(N2);
+					// ((CompositeSyntaxNode)node).addChild(BOOL);
+					// ((CompositeSyntaxNode)node).addChild(OP);
+					deconstructTree(newBOOL,scope, false);
+				}
+			}
+		}
 
 		if(!node.isLeaf()){
 			for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
@@ -244,122 +577,6 @@ public class Translator{
 
 	}
 
-	private void setProcLineNumbers(){
-		lineNumber = 0;
-		Procedure.foundFirst = false;
-		labels = new HashMap<>();
-		setProcLineNumbers(symbolTree.get(0), scopeTable.get(0), true);
-	}
-
-	private void setProcLineNumbers(SyntaxNode node, Scope scope, Boolean first){
-		if(node == null) return;
-		else if(node.token == Token.eToken.PROG){
-			scope = first? scope : scope.getScopeByIndex(node.index);
-			if(scope == null) return;
-		}
-		else if(node.token == Token.eToken.PROC){
-			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)node).children.get(1));
-			Procedure proc = scope.getProcedureByName(proc_name.val());
-
-			if(Procedure.foundFirst == false)	proc.first = true;
-			if(proc.first) incLine();
-			Procedure.foundFirst = true;
-
-			labels.put(proc.name(), new BasicNode_LABEL(proc.name()));
-
-			incLine();
-			proc.basic_line = lineNumber;
-			setProcLineNumbers(((CompositeSyntaxNode)node).children.get(2), scope, false);
-			return;
-		}else if(node.token == Token.eToken.INSTR){
-			SyntaxNode INS = ((CompositeSyntaxNode)node).children.get(0);
-			if(INS.token != Token.eToken.DECL){
-				incLine();
-			}
-			return;
-		}
-
-		if(!node.isLeaf()){
-			for(SyntaxNode child : ((CompositeSyntaxNode)node).children){
-				setProcLineNumbers(child,scope, false);
-			}
-		}
-	}
-
-
-	private void translateAbstract(){
-		basicNodes = new ArrayList<>();
-		labels.put("H",new BasicNode_LABEL("H"));
-		translateAbstract(symbolTree.get(0), scopeTable.get(0), true);
-		basicNodes.add(labels.get("H"));
-	}
-
-	private void translateAbstract(SyntaxNode sNode, Scope scope, Boolean first){
-		if(sNode.token == Token.eToken.PROG){
-			scope = first? scope : scope.getScopeByIndex(sNode.index);
-			if(scope == null) return;
-		}
-		if(sNode.token == Token.eToken.INSTR){
-			SyntaxNode INS = ((CompositeSyntaxNode)sNode).children.get(0);
-			if(INS.token == Token.eToken.CALL){
-				LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)INS).children.get(0));
-				Procedure proc = scope.getProcedureByName(proc_name.val());
-				basicNodes.add(new BasicNode_GOSUB(proc));
-			}
-			else if(INS.token != Token.eToken.DECL){
-				String instr = nodeToString(INS, scope);
-				basicNodes.add(new BasicNode(instr));
-			}
-		}
-		else if(sNode.token == Token.eToken.PROC){
-			LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)sNode).children.get(1));
-			Procedure proc = scope.getProcedureByName(proc_name.val());
-			if(proc.first) basicNodes.add(new BasicNode_END());
-			basicNodes.add(labels.get(proc.name()));
-			translateAbstract(((CompositeSyntaxNode)sNode).children.get(2),scope, false);
-			basicNodes.add(new BasicNode("RETURN"));
-		}
-		else if(sNode.token == Token.eToken.CALL){
-		
-		}
-		else if(!sNode.isLeaf()){
-			for(SyntaxNode child : ((CompositeSyntaxNode)sNode).children){
-				translateAbstract(child,scope, false);
-			}
-		}
-	}
-
-	private String nodeToString(SyntaxNode node, Scope scope){
-		if(isPrimitive(node.token)){
-			return ((LeafSyntaxNode)node).val();
-		}
-		else if(isIO(node.token) || isOP(node.token) || isPrimitiveBOOL(node.token)){
-			return TOKENtoBASIC(node.token);
-		}
-		else if(node.token == Token.eToken.VAR){
-			return nodeToString(((CompositeSyntaxNode)node).children.get(0),scope) + typeSuffix(node.type);
-		}
-		else if(node.token == Token.eToken.ASSIGN){			//ASSIGN
-			String var = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
-			String value = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
-			return var + " = " + value;
-		}
-		else if(node.token == Token.eToken.IO){			//OUTPUT	
-			String io = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
-			String var = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
-			return io + " " + var;
-		}
-		else if(node.token == Token.eToken.NUMEXPR){
-			return nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
-		}
-		else if(node.token == Token.eToken.CALC){
-			String op = nodeToString(((CompositeSyntaxNode)node).children.get(0),scope);
-			String n1 = nodeToString(((CompositeSyntaxNode)node).children.get(1),scope);
-			String n2 = nodeToString(((CompositeSyntaxNode)node).children.get(2),scope);
-			return n1 + " " + op + " " + n2;
-		}
-		return "#--basicString err("+node.token+")--##";
-	}
 
 	private void incLine(){
 		lineNumber += 10;
@@ -372,9 +589,16 @@ public class Translator{
 	}
 
 	private Boolean isOP(Token.eToken token){
-		return token == Token.eToken.tok_add || token == Token.eToken.tok_sub || token == Token.eToken.tok_mult
+		return isNot(token) || token == Token.eToken.tok_add || token == Token.eToken.tok_sub || token == Token.eToken.tok_mult
 		|| token == Token.eToken.tok_eq || token == Token.eToken.tok_greater_than || token == Token.eToken.tok_less_than ;
-		// || token == Token.eToken.tok_and || token == Token.eToken.tok_or || token == Token.eToken.tok_not
+	}
+
+	private Boolean isAndOr(Token.eToken token){
+		return token == Token.eToken.tok_and || token == Token.eToken.tok_or;
+	}
+
+	private Boolean isNot(Token.eToken token){
+		return token == Token.eToken.tok_not;
 	}
 
 	private Boolean isPrimitive(Token.eToken token){
@@ -399,7 +623,7 @@ public class Translator{
 		if(token == Token.eToken.tok_eq) return "=";
 		if(token == Token.eToken.tok_less_than) return "<";
 		if(token == Token.eToken.tok_greater_than) return ">";
-		// if(token == Token.eToken.tok_) return "PRINT";
+		if(token == Token.eToken.tok_not) return "NOT";
 		// if(token == Token.eToken.tok_) return "PRINT";
 		// if(token == Token.eToken.tok_) return "PRINT";
 		return "##-TOKENtoBASIC-##";

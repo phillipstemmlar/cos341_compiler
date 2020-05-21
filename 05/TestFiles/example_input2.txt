@@ -1,14 +1,11 @@
-num r;
-num s;
-string b;
-r = add(2,1);
-r = r;
-init;
-for(r = 0; r < r; r = add(r,1)){
-	r = r
-};
-output(b);
+bool cond; bool b1; bool b2; 
+b1 = F; b2 = F;
 
-proc init {
-	r = 1
-}
+bool temp;
+temp = not b1;
+if(temp) then{
+  temp = not b2
+};
+cond = not temp;
+
+output(cond)

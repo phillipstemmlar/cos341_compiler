@@ -36,7 +36,7 @@ exec:
 	${EXE} -${JAR} ${BIN}/${JAR_FILE} $(INPUT_FILE)
 
 basic:
-	cat ${BASIC_FILE}
+	# cat ${BASIC_FILE}
 	${INTERP} ${BASIC_FILE}
 
 test: run

@@ -1,13 +1,23 @@
 public class BasicNode_GOTO extends BasicNode{
 
-	public BasicNode_GOTO(String line){
-		super(line);
+	String jumpTo;
+
+	public BasicNode_GOTO(String Label){
+		super("GOTO");
 		goto_ = true;
-	}
-	
-	public String line(){
-		return val() + "\n";
+		jumpTo = Label;
 	}
 
+	public String JumpTo(){
+		return jumpTo;
+	}
+
+	public void JumpTo(String jmp){
+		jumpTo = jmp;
+	}
+
+	public String str(){
+		return val() + " " + JumpTo() + "\n";
+	}
 
 }

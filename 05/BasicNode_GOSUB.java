@@ -1,24 +1,23 @@
 public class BasicNode_GOSUB extends BasicNode{
 
-	public Procedure proc;
-	protected Boolean end = false;
+	String jumpTo;
 
-	public BasicNode_GOSUB(Procedure p){
+	public BasicNode_GOSUB(String Label){
 		super("GOSUB");
 		gosub = true;
-		proc = p;
+		jumpTo = Label;
 	}
 
-	private String procName(){
-		if(end || proc == null) return "H"; else return proc.name();
+	public String JumpTo(){
+		return jumpTo;
 	}
 
-	public String line(){
-		return val() + " " + procName() + "\n";
+	public void JumpTo(String jmp){
+		jumpTo = jmp;
 	}
 
-	public Boolean end(){
-		return end;
+	public String str(){
+		return val() + " " + JumpTo() + "\n";
 	}
 
 }
