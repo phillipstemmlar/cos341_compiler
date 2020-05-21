@@ -1,5 +1,6 @@
-bool b;
+num counter; num limit;
+limit = 5;
 
-b = and(or(F,and(T,F)),or(T,F));
-
-output(b)
+for(counter = 0; counter < limit; counter = add(counter,1)){
+  output(counter)
+}

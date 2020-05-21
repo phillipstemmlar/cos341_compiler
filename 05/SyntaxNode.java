@@ -56,7 +56,7 @@ public class SyntaxNode{
 	}
 
 	public String name3(){
-		return name() + "" + typeStr() + hasValueStr() + parentInfo();
+		return name() + "" + typeStr() + hasValueStr();
 	}
 
 	public String parentInfo(){
@@ -64,7 +64,7 @@ public class SyntaxNode{
 	}
 
 	public String name2(){
-		return name() + strType() + strHasValue() + parentInfo();
+		return name() + strType() + strHasValue();
 	}
 
 	private Boolean validType(){

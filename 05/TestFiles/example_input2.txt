@@ -1,11 +1,8 @@
-bool cond; bool b1; bool b2; 
-b1 = F; b2 = F;
+num counter; num limit;
+limit = 5;
+counter = 0;
 
-bool temp;
-temp = not b1;
-if(temp) then{
-  temp = not b2
-};
-cond = not temp;
-
-output(cond)
+while((counter < limit)){
+  counter = add(counter, 1);
+  output(counter)
+}

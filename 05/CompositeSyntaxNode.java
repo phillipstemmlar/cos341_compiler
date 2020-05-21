@@ -87,7 +87,7 @@ public class CompositeSyntaxNode extends SyntaxNode{
 		children.add(0,child);
 	}
 
-	private void appendChild(SyntaxNode child){
+	public void appendChild(SyntaxNode child){
 		child.parent = this;
 		children.add(child);
 	}
