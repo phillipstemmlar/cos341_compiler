@@ -105,6 +105,17 @@ public class CompositeSyntaxNode extends SyntaxNode{
 		return children.get(index);
 	}
 
+	public SyntaxNode lastChild(){
+		return getChild(children.size()-1);
+	}
+
+	public void setChildren(List<SyntaxNode> childs){
+		for(SyntaxNode child: childs){
+			child.parent = this;
+		}
+		children = childs;
+	}
+
 	public SyntaxNode[] childrenArray(){
 		if(children.size() == 0) return null;
 

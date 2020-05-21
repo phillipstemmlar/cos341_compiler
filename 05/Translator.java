@@ -17,9 +17,9 @@ public class Translator{
 			symbolTree = symTree;
 			scopeTable = scopeTbl;
 
-			System.out.println(symbolTree.get(0).treeString());
+			// System.out.println(symbolTree.get(0).treeString());
 			deconstructTree();
-			System.out.println(symbolTree.get(0).treeString());
+			// System.out.println(symbolTree.get(0).treeString());
 
 			setProcLineNumbers();
 
@@ -129,7 +129,7 @@ public class Translator{
 				LeafSyntaxNode proc_name = (LeafSyntaxNode)(((CompositeSyntaxNode)INS).children.get(0));
 				basicNodes.add(new BasicNode_GOSUB(proc_name.val()));
 			}
-			if(INS.token == Token.eToken.tok_halt){
+			else if(INS.token == Token.eToken.tok_halt){
 				basicNodes.add(new BasicNode_END());
 			}
 			else if(INS.token == Token.eToken.COND_LOOP){
@@ -492,7 +492,7 @@ public class Translator{
 				}
 				if(parCODE != null){
 					CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
-					newCODE.children = ((CompositeSyntaxNode)parCODE).children;
+					newCODE.setChildren(((CompositeSyntaxNode)parCODE).children);
 					((CompositeSyntaxNode)parCODE).resetChildren();
 
 					//IF - BOOL - THEN - CODE
@@ -519,7 +519,7 @@ public class Translator{
 						LeafSyntaxNode new_var_i = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
 						CompositeSyntaxNode newBOOL_i = new CompositeSyntaxNode(Token.eToken.BOOL, "");
 
-						newBOOL_i.children = ((CompositeSyntaxNode)THIRD).children;
+						newBOOL_i.setChildren(((CompositeSyntaxNode)THIRD).children);
 						((CompositeSyntaxNode)THIRD).resetChildren();
 
 						new_var_i.val("V" + temp);
@@ -562,7 +562,7 @@ public class Translator{
 				}
 				if(parCODE != null){
 					CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
-					newCODE.children = ((CompositeSyntaxNode)parCODE).children;
+					newCODE.setChildren(((CompositeSyntaxNode)parCODE).children);
 					((CompositeSyntaxNode)parCODE).resetChildren();
 
 					CompositeSyntaxNode newINSTR = new CompositeSyntaxNode(Token.eToken.INSTR, "");
@@ -571,7 +571,7 @@ public class Translator{
 					LeafSyntaxNode new_var = new LeafSyntaxNode(Token.eToken.tok_user_defined_identifier, "");
 					CompositeSyntaxNode newBOOL = new CompositeSyntaxNode(Token.eToken.BOOL, "");
 
-					newBOOL.children = ((CompositeSyntaxNode)SECOND).children;
+					newBOOL.setChildren(((CompositeSyntaxNode)SECOND).children);
 					((CompositeSyntaxNode)SECOND).resetChildren();
 
 					new_var.val("V" + temp);
@@ -635,7 +635,7 @@ public class Translator{
 				}
 				if(parCODE != null){
 					CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
-					newCODE.children = ((CompositeSyntaxNode)parCODE).children;
+					newCODE.setChildren(((CompositeSyntaxNode)parCODE).children);
 					((CompositeSyntaxNode)parCODE).resetChildren();
 
 					CompositeSyntaxNode newINSTR = new CompositeSyntaxNode(Token.eToken.INSTR, "");
@@ -650,7 +650,7 @@ public class Translator{
 					new_var.val("V" + varCount);
 					new_var2.val("V" + varCount);
 
-					newBOOL.children = ((CompositeSyntaxNode)SECOND).children;
+					newBOOL.setChildren(((CompositeSyntaxNode)SECOND).children);
 					((CompositeSyntaxNode)SECOND).resetChildren();
 
 					//SETUP INSTR
@@ -668,6 +668,7 @@ public class Translator{
 
 					((CompositeSyntaxNode)SECOND).addChild(newVAR2);
 
+					deconstructTree(newBOOL,scope, false);
 				}
 			}
 		}
@@ -681,7 +682,7 @@ public class Translator{
 			}
 			if(parCODE != null){
 				CompositeSyntaxNode newCODE = new CompositeSyntaxNode(Token.eToken.CODE, "");
-				newCODE.children = ((CompositeSyntaxNode)parCODE).children;
+				newCODE.setChildren(((CompositeSyntaxNode)parCODE).children);
 				((CompositeSyntaxNode)parCODE).resetChildren();
 
 				CompositeSyntaxNode newINSTR = new CompositeSyntaxNode(Token.eToken.INSTR, "");
@@ -696,7 +697,7 @@ public class Translator{
 				new_var.val("V" + varCount);
 				new_var2.val("V" + varCount);
 
-				newBOOL.children = ((CompositeSyntaxNode)BOOL).children;
+				newBOOL.setChildren(((CompositeSyntaxNode)BOOL).children);
 				((CompositeSyntaxNode)BOOL).resetChildren();
 
 				//SETUP INSTR
@@ -737,7 +738,7 @@ public class Translator{
 				new_var.val("V" + varCount);
 				new_var2.val("V" + varCount);
 
-				newBOOL.children = ((CompositeSyntaxNode)BOOL).children;
+				newBOOL.setChildren(((CompositeSyntaxNode)BOOL).children);
 				((CompositeSyntaxNode)BOOL).resetChildren();
 
 				//SETUP INSTR
